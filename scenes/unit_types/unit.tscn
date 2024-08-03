@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=3 format=3 uid="uid://cxc808rm7u8l4"]
 
 [ext_resource type="Script" path="res://scripts/unit_types/unit.gd" id="1_qclsc"]
 
@@ -8,6 +8,7 @@
 script = ExtResource("1_qclsc")
 
 [node name="Body" type="Node3D" parent="."]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
 
 [node name="BodyCollider" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)

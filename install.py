@@ -88,6 +88,8 @@ def download_and_install_extension() -> bool:
     # Extract extension.zip into the bin directory
     with zipfile.ZipFile(extension_zip, 'r') as zip_ref:
         zip_ref.extractall()
+    
+    os.remove(extension_zip)
 
     print("Extracted extension")
     return True
