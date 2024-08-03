@@ -1,5 +1,5 @@
-extends Node
 class_name NPC_Controller
+extends Node
 
 var aggro_type: UnitData.AggroType
 var aggro_distance: float = 1.0
@@ -75,21 +75,22 @@ func _enter_aggro_range(body: PhysicsBody3D):
 	if controlled_unit.target_entity:
 		return
 
-	var _collided_unit = body as Unit
-	if _collided_unit == null:
+	var collided_unit = body as Unit
+	if collided_unit == null:
 		return
 
-	if _collided_unit == controlled_unit:
-		return
-	if _collided_unit.team == controlled_unit.team:
+	if collided_unit == controlled_unit:
 		return
 
-	print("Now targeting:" + _collided_unit.name)
+	if collided_unit.team == controlled_unit.team or collided_unit.team == 0:
+		return
+
+	print("Now targeting:" + collided_unit.name)
 
 	controlled_unit.target_entity = body as Unit
 
 	# Make the attacking work in the future, for now just follow the target
-	controlled_unit.change_state("Attacking", _collided_unit)
+	controlled_unit.change_state("Attacking", collided_unit)
 
 
 func _exit_deaggro_range(body: PhysicsBody3D):

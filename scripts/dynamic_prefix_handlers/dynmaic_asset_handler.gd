@@ -1,5 +1,5 @@
-extends ResourceFormatLoader
 class_name DynmaicPrefixHandler
+extends ResourceFormatLoader
 
 var supported_prefixes := Identifier.get_all_content_types()
 
@@ -54,7 +54,7 @@ func _load(path: String, _original_path: String, _use_sub_threads: bool, _cache_
 	return FAILED
 
 
-func _rename_dependencies(path: String, renames: Dictionary):
+func _rename_dependencies(_path: String, _renames: Dictionary):
 	return OK
 
 
@@ -64,9 +64,9 @@ func try_resource_load(resource_path):
 		var load_result = ResourceLoader.load(resource_path)
 		if load_result != null:
 			return load_result
-		else:
-			print("Failed to load resource from ResourceLoader: '" + resource_path + "'")
-			return null
+
+		print("Failed to load resource from ResourceLoader: '" + resource_path + "'")
+		return null
 
 	return null
 

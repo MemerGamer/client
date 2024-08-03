@@ -1,5 +1,5 @@
-extends MapFeature
 class_name UnitSpawnerFeature
+extends MapFeature
 
 # serialized data stats
 var team: int
@@ -132,19 +132,19 @@ func _on_unit_death(unit: Unit):
 		return
 
 	if spawned_units.get_child_count() == 0:
-		var _next_cd = _get_wave_cooldown()
-		print("Next wave in " + str(_next_cd) + " seconds")
-		spawn_timer.wait_time = _next_cd
+		var next_cd = _get_wave_cooldown()
+		print("Next wave in " + str(next_cd) + " seconds")
+		spawn_timer.wait_time = next_cd
 		spawn_timer.start()
 
 
 func _spawn_wave():
 	var spawn_time = map.time_elapsed
 
-	var _size = _get_wave_size(current_wave, spawn_time)
-	print("Spawning wave of " + str(_size) + " units")
+	var next_wave_size = _get_wave_size(current_wave, spawn_time)
+	print("Spawning wave of " + str(next_wave_size) + " units")
 
-	for i in range(_size):
+	for i in range(next_wave_size):
 		var spawn_args = {
 			"unitType": unit_type,
 			"name": name + "_wave_" + str(current_wave) + "_unit_" + str(current_wave),
@@ -161,9 +161,9 @@ func _spawn_wave():
 	current_wave += 1
 
 	if not require_clear:
-		var _next_cd = _get_wave_cooldown()
-		print("Next wave in " + str(_next_cd) + " seconds")
-		spawn_timer.wait_time = _next_cd
+		var next_cd = _get_wave_cooldown()
+		print("Next wave in " + str(next_cd) + " seconds")
+		spawn_timer.wait_time = next_cd
 		spawn_timer.start()
 
 
@@ -176,17 +176,17 @@ func _multiplayer_spawn_unit(data: Dictionary):
 		print("Spawn is missing type")
 		return null
 
-	var _unit_data = RegistryManager.units().get_element(data["unitType"])
-	if _unit_data == null:
+	var new_unit_data = RegistryManager.units().get_element(data["unitType"])
+	if new_unit_data == null:
 		print("Failed to get unit data")
 		return
 
-	var _unit = _unit_data.spawn(data)
-	_unit.died.connect(func(): _on_unit_death(_unit))
+	var new_unit = new_unit_data.spawn(data)
+	new_unit.died.connect(func(): _on_unit_death(new_unit))
 
 	if map == null:
 		print("Map is null not setting it in spawner")
-		return _unit
+		return new_unit
 
-	_unit.map = map
-	return _unit
+	new_unit.map = map
+	return new_unit

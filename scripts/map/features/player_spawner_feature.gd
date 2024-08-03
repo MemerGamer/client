@@ -1,5 +1,5 @@
-extends MapFeature
 class_name PlayerSpawnerFeature
+extends MapFeature
 
 var team: int
 

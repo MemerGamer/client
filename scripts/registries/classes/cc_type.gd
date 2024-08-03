@@ -1,5 +1,5 @@
-extends Object
 class_name CCType
+extends Object
 
 var cc_id: Identifier = null
 var cc_mask: int = 0

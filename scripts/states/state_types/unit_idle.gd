@@ -1,5 +1,5 @@
+class_name UnitIdle
 extends State
-class_name unit_idle
 
 
 func update_tick_client(entity: Unit, delta):

@@ -2,16 +2,18 @@ class_name JsonHelper
 
 
 static func get_vector3(
-	dict: Dictionary, key_name: String, fallback_value = Vector3(0, 0, 0)
+	dict: Dictionary, key_name: String = "", fallback_value = Vector3(0, 0, 0)
 ) -> Vector3:
 	var value = fallback_value
+	var raw_data = dict
 
-	if not dict.has(key_name):
-		return value
+	if key_name != "":
+		if not dict.has(key_name):
+			return value
 
-	var raw_data = dict[key_name]
-	if not raw_data:
-		return value
+		raw_data = dict[key_name]
+		if not raw_data:
+			return value
 
 	if raw_data.has("x"):
 		value.x = float(raw_data["x"])
@@ -26,16 +28,18 @@ static func get_vector3(
 
 
 static func get_vector2(
-	dict: Dictionary, key_name: String, fallback_value = Vector2(0, 0)
+	dict: Dictionary, key_name: String = "", fallback_value = Vector2(0, 0)
 ) -> Vector2:
 	var value = fallback_value
+	var raw_data = dict
 
-	if not dict.has(key_name):
-		return value
+	if key_name != "":
+		if not dict.has(key_name):
+			return value
 
-	var raw_data = dict[key_name]
-	if not raw_data:
-		return value
+		raw_data = dict[key_name]
+		if not raw_data:
+			return value
 
 	if raw_data.has("x"):
 		value.x = float(raw_data["x"])

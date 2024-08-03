@@ -1,5 +1,5 @@
+class_name UnitAutoAttack
 extends State
-class_name unit_auto_attack
 
 var windup_timer: Timer
 var cooldown_timer: Timer
@@ -22,12 +22,12 @@ func modify(entity: Unit, _args = null):
 		print("No target entity provided")
 		return
 
-	var _unit = _args as Unit
-	if not _unit:
+	var other_unit = _args as Unit
+	if not other_unit:
 		print("No target doesn't seem to be a unit")
 		return
 
-	target_unit = _unit
+	target_unit = other_unit
 
 	if target_unit != entity.target_entity:
 		entity.target_entity = target_unit

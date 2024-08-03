@@ -1,10 +1,18 @@
-extends Node
 class_name MapNode
+extends Node
 
 enum EndCondition {
 	TEAM_ELIMINATION,
 	STRUCTURE_DESTRUCTION,
 }
+
+const PlayerController = preload("res://scenes/player/_player.tscn")
+
+const PlayerDesktopHud = preload("res://ui/game_ui.tscn")
+const PlayerDesktopSettings = preload("res://ui/settings_menu/settings_menu.tscn")
+const PlayerItemShop = preload("res://ui/shops/item_shop.tscn")
+
+const DmgPopupScene = preload("res://scenes/effects/damage_popup.tscn")
 
 @export var map_configuration: Dictionary = {}
 
@@ -16,21 +24,13 @@ enum EndCondition {
 
 @export var time_elapsed: float = 0
 
-var Characters = {}
+var characters = {}
 var player_cooldowns = {}
 var end_conditions = []
 
 var last_player_index = 0
 
 var player_passive_item_slots = 2
-
-const player_controller = preload("res://scenes/player/_player.tscn")
-
-const player_desktop_hud = preload("res://ui/game_ui.tscn")
-const player_desktop_settings = preload("res://ui/settings_menu/settings_menu.tscn")
-const player_item_shop = preload("res://ui/shops/item_shop.tscn")
-
-const dmg_popup_scene = preload("res://scenes/effects/damage_popup.tscn")
 
 
 func _ready():
@@ -63,7 +63,7 @@ func _ready():
 
 		var new_char = $CharacterSpawner.spawn(spawn_args)
 		new_char.look_at(Vector3(0, 0, 0))
-		Characters[player["peer_id"]] = new_char
+		characters[player["peer_id"]] = new_char
 
 
 func _physics_process(delta):
@@ -133,7 +133,7 @@ func _spawn_damage_popup(args):
 		print("Error damage popup spawn args could now be parsed as dict!")
 		return null
 
-	var new_popup = dmg_popup_scene.instantiate()
+	var new_popup = DmgPopupScene.instantiate()
 	new_popup.spawn_position = spawn_args["position"] as Vector3
 	new_popup.damage_value = int(spawn_args["value"])
 	new_popup.damage_type = spawn_args["type"]
@@ -145,11 +145,11 @@ func _load_config():
 	player_passive_item_slots = int(map_configuration["player_passive_item_slots"])
 
 	# unlike the other nodes the map features node is not created in the _setup_nodes function
-	# this is needed because all features are added to this node and we need to load the map configuration
-	# before we can set up most of the nodes
-	var _map_features = Node.new()
-	_map_features.name = "MapFeatures"
-	add_child(_map_features)
+	# this is needed because all features are added to this node and we need to load the
+	# map configuration before we can set up most of the nodes
+	var map_features_node = Node.new()
+	map_features_node.name = "MapFeatures"
+	add_child(map_features_node)
 	map_features = get_node("MapFeatures")
 
 	# Load the map configuration
@@ -198,17 +198,17 @@ func _load_config():
 func client_setup():
 	# Add the player into the world
 	# The player rig will ask the server for their character
-	var player_rig = player_controller.instantiate()
+	var player_rig = PlayerController.instantiate()
 	add_child(player_rig)
 
 	# instantiate and add all the UI components
-	add_child(player_desktop_settings.instantiate())
+	add_child(PlayerDesktopSettings.instantiate())
 
-	var hud = player_desktop_hud.instantiate()
+	var hud = PlayerDesktopHud.instantiate()
 	hud._map = self
 	add_child(hud)
 
-	var item_shop = player_item_shop.instantiate()
+	var item_shop = PlayerItemShop.instantiate()
 	item_shop.player_instance = player_rig
 	add_child(item_shop)
 
@@ -220,7 +220,7 @@ func on_unit_damaged(unit: Unit, damage: int, damage_type: Unit.DamageType):
 
 func on_player_death(player_id: int):
 	# get the character that died
-	var character = Characters.get(player_id)
+	var character = characters.get(player_id)
 	var team = character.team
 
 	# Check if the game has ended
@@ -234,7 +234,7 @@ func on_player_death(player_id: int):
 			continue
 
 		team_elimination = true
-		for _char in Characters.values():
+		for _char in characters.values():
 			if _char.name == str(player_id):
 				continue
 
@@ -266,6 +266,7 @@ func client_ready():
 @rpc("any_peer")
 func register_player():
 	var peer_id = multiplayer.get_remote_sender_id()
+	# TODO: implement player registering
 
 
 @rpc("any_peer", "call_local")
@@ -401,7 +402,7 @@ func free_ability(cooldown: float, peer_id: int, ab_id: int) -> void:
 
 
 func get_character(id: int):
-	var character = Characters.get(id)
+	var character = characters.get(id)
 	if not character:
 		print_debug("Failed to find character")
 		return false

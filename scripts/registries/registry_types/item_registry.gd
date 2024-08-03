@@ -1,5 +1,5 @@
-extends RegistryBase
 class_name ItemRegistry
+extends RegistryBase
 
 @export var highest_item_tier: int = -1
 
@@ -60,41 +60,41 @@ func load_from_json(_json: Dictionary) -> bool:
 		print("Item: No data object provided.")
 		return false
 
-	var _json_data = _json["data"] as Dictionary
-	if _json_data == null:
+	var raw_json_data = _json["data"] as Dictionary
+	if raw_json_data == null:
 		print("Item: Data object is not a dictionary.")
 		return false
 
-	if not _json_data.has("id"):
+	if not raw_json_data.has("id"):
 		print("Item: No name provided.")
 		return false
 
-	var item_id_str := str(_json_data["id"])
+	var item_id_str := str(raw_json_data["id"])
 	var item_id := Identifier.from_string(item_id_str)
 
 	if contains(item_id_str):
 		print("Item (%s): Item already exists in item registry." % item_id_str)
 		return false
 
-	if not _json_data.has("texture"):
+	if not raw_json_data.has("texture"):
 		print("Item (%s): No texture provided." % item_id_str)
 		return false
 
-	var texture_id := Identifier.for_resource("texture://" + str(_json_data["texture"]))
+	var texture_id := Identifier.for_resource("texture://" + str(raw_json_data["texture"]))
 
-	if not _json_data.has("recipe"):
+	if not raw_json_data.has("recipe"):
 		print("Item (%s): No recipe provided." % item_id_str)
 		return false
 
-	if not _json_data["recipe"].has("gold_cost"):
+	if not raw_json_data["recipe"].has("gold_cost"):
 		print("Item (%s): No gold cost provided." % item_id_str)
 		return false
 
-	var gold_cost := int(_json_data["recipe"]["gold_cost"])
+	var gold_cost := int(raw_json_data["recipe"]["gold_cost"])
 	var components: Array[String] = []
 
-	if _json_data["recipe"].has("components"):
-		var comps = _json_data["recipe"]["components"]
+	if raw_json_data["recipe"].has("components"):
+		var comps = raw_json_data["recipe"]["components"]
 		if not (comps is Array):
 			print("Item (%s): Components must be an array." % item_id_str)
 			return false
@@ -102,11 +102,11 @@ func load_from_json(_json: Dictionary) -> bool:
 		for comp in comps:
 			components.append(str(comp))
 
-	if not _json_data.has("stats"):
+	if not raw_json_data.has("stats"):
 		print("Item (%s): No stats provided." % item_id_str)
 		return false
 
-	var raw_stats = _json_data["stats"]
+	var raw_stats = raw_json_data["stats"]
 	if not (raw_stats is Dictionary):
 		print("Item (%s): Stats must be a dictionary." % item_id_str)
 		return false
@@ -114,8 +114,8 @@ func load_from_json(_json: Dictionary) -> bool:
 	var stats = StatCollection.from_dict(raw_stats)
 
 	var loaded_effects: Array[ActionEffect] = []
-	if _json_data.has("effects"):
-		var raw_effects = _json_data["effects"]
+	if raw_json_data.has("effects"):
+		var raw_effects = raw_json_data["effects"]
 
 		if not (raw_effects is Array):
 			print("Item (%s): Effects must be an array." % item_id_str)

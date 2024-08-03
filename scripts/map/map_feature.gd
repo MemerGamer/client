@@ -1,5 +1,5 @@
-extends Node3D
 class_name MapFeature
+extends Node3D
 
 var feature_type: String = ""
 var feature_name: String = ""
@@ -50,31 +50,14 @@ static func _get_child_node(node_name: String, parent: Node):
 static func _get_position(node_name: String, parent: Node, fallback_data: Dictionary):
 	var feature_node = _get_child_node(node_name, parent)
 	if feature_node != null:
-		var _pos := Vector3(feature_node.position)
+		var initial_pos := Vector3(feature_node.position)
 		parent.remove_child(feature_node)
-		return _pos
-
-	var _position = Vector3(0, 0, 0)
+		return initial_pos
 
 	if fallback_data == null:
 		return null
 
-	var x = 0
-	var y = 0
-	var z = 0
-
-	if fallback_data.has("x"):
-		x = fallback_data["x"]
-
-	if fallback_data.has("y"):
-		y = fallback_data["y"]
-
-	if fallback_data.has("z"):
-		z = fallback_data["z"]
-
-	_position = Vector3(x, y, z)
-
-	return _position
+	return JsonHelper.get_vector3(fallback_data)
 
 
 func spawn(_feature_data: Dictionary, _parent: Node) -> bool:

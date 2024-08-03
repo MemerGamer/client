@@ -1,5 +1,5 @@
-extends Object
 class_name RegistryBase
+extends Object
 
 ## RegistryBase is the base class for all registry classes. It provides the basic
 ## functionality for a registry class.

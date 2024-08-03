@@ -1,5 +1,5 @@
-extends RegistryBase
 class_name CCTypesRegistry
+extends RegistryBase
 
 const CC_MASK_MOVEMENT = 0b1
 const CC_MASK_CAST_MOBILITY = 0b10

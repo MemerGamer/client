@@ -76,17 +76,17 @@ func get_tooltip_string(_caster: Unit = null) -> String:
 				item_desctiptions["cost"]
 			]
 		)
-	else:
-		return (
-			"%s\n%s\n\n%s\n%s\n%s"
-			% [
-				item_desctiptions["name"],
-				item_desctiptions["lore"],
-				item_desctiptions["stats"],
-				item_desctiptions["effects"],
-				item_desctiptions["cost"]
-			]
-		)
+
+	return (
+		"%s\n%s\n\n%s\n%s\n%s"
+		% [
+			item_desctiptions["name"],
+			item_desctiptions["lore"],
+			item_desctiptions["stats"],
+			item_desctiptions["effects"],
+			item_desctiptions["cost"]
+		]
+	)
 
 
 func get_texture_resource() -> Identifier:
@@ -182,10 +182,7 @@ func is_valid(item_registry: RegistryBase = null) -> bool:
 	if item_registry == null:
 		item_registry = RegistryManager.items()
 
-	if not id.is_valid():
-		return false
-
-	if not texture_id.is_valid():
+	if (not id.is_valid()) or (not texture_id.is_valid()):
 		return false
 
 	if gold_cost < 0:
@@ -194,9 +191,6 @@ func is_valid(item_registry: RegistryBase = null) -> bool:
 	var highest_tier = -1
 	if components.size() > 0:
 		for component in components:
-			if not Identifier.from_string(component).is_valid():
-				return false
-
 			if not item_registry.contains(component):
 				return false
 

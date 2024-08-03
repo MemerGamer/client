@@ -14,7 +14,7 @@ var damage_type: Unit.DamageType = Unit.DamageType.PHYSICAL
 var can_crit: bool = false
 
 
-func _from_dict(_dict: Dictionary) -> bool:
+func special_from_dict(_dict: Dictionary) -> bool:
 	if not _dict.has("damage") and not _dict.has("scaling"):
 		print(
 			"Could not create OnHitDamageEffect from dictionary. Dictionary is missing required keys."

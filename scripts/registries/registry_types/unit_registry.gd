@@ -1,5 +1,5 @@
-extends RegistryBase
 class_name UnitRegistry
+extends RegistryBase
 
 var _internal_values: Dictionary = {}
 

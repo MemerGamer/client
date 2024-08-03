@@ -1,5 +1,3 @@
-extends Node
-
 ## The base class for all action effects.
 ## [br][br]
 ## This class creates a common interface for all action effects
@@ -14,6 +12,7 @@ extends Node
 ## This class is meant to be extended by other classes that
 ## implement specific action effects.
 class_name ActionEffect
+extends Node
 
 ## The activation state of the action effect
 ## [br][br]
@@ -106,7 +105,7 @@ static func from_dict(_dict: Dictionary) -> ActionEffect:
 		print("Could not create action effect from dictionary. Dictionary has no base_id key.")
 		return null
 
-	var _instance: ActionEffect = null
+	var effect_instance: ActionEffect = null
 	match _dict["base_id"]:
 		"ActionEffect":
 			print(
@@ -117,7 +116,7 @@ static func from_dict(_dict: Dictionary) -> ActionEffect:
 			)
 			return null
 		"OnHitDamageEffect":
-			_instance = OnHitDamageEffect.new()
+			effect_instance = OnHitDamageEffect.new()
 
 		_:
 			print("Invalid action effect class name: " + _dict["base_id"])
@@ -127,14 +126,14 @@ static func from_dict(_dict: Dictionary) -> ActionEffect:
 		print("Could not create action effect from dictionary. Dictionary has no display_id key.")
 		return null
 
-	_instance._display_id = Identifier.from_string(str(_dict["display_id"]))
-	_instance._is_exclusive = JsonHelper.get_optional_bool(_dict, "is_exclusive", false)
+	effect_instance._display_id = Identifier.from_string(str(_dict["display_id"]))
+	effect_instance._is_exclusive = JsonHelper.get_optional_bool(_dict, "is_exclusive", false)
 
-	if not _instance._from_dict(_dict):
+	if not effect_instance.special_from_dict(_dict):
 		print("Could not create action effect from dictionary. Could not load data.")
 		return null
 
-	return _instance
+	return effect_instance
 
 
 # The getter functions for the action effect
@@ -191,7 +190,7 @@ func get_description_string(_caster: Unit) -> String:
 ## The dictionary should contain all the data needed to create the
 ## specific action effect subclass.
 ## The return value should be true if the loading was successful
-func _from_dict(_dict: Dictionary) -> bool:
+func special_from_dict(_dict: Dictionary) -> bool:
 	return false
 
 
