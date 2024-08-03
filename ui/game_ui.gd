@@ -1,6 +1,6 @@
 extends Node
 
-@export var _map : Node
+@export var _map: Node
 
 @onready var player_icon = $CharacterUI/PortraitBorder/Portrait
 @onready var money_count = $GameStats/Money
@@ -15,7 +15,8 @@ extends Node
 
 @onready var spells_container = $CharacterUI/Items/HBoxContainer/SpellsPanel/SpellsContainer
 @onready var active_items_container = $CharacterUI/Items/HBoxContainer/ActiveItemPanel/ActiveItemGrid
-@onready var passive_items_container = $CharacterUI/Items/HBoxContainer/PassiveItemPanel/PassiveItemGrid
+@onready
+var passive_items_container = $CharacterUI/Items/HBoxContainer/PassiveItemPanel/PassiveItemGrid
 
 const item_box_scene = preload("res://ui/player_stats/item_box_base.tscn")
 const item_icon_size = Vector2(24, 24)
@@ -24,6 +25,7 @@ var _character
 
 var waiting_for_character = false
 var first_draw_iteration = true
+
 
 func _ready() -> void:
 	if Config.is_dedicated_server:
@@ -50,7 +52,9 @@ func _process(_delta: float) -> void:
 		return
 
 	money_count.text = str(_character.current_gold)
-	kda_display.text = str(_character.kills) + "/" + str(_character.deaths) + "/" + str(_character.assists)
+	kda_display.text = (
+		str(_character.kills) + "/" + str(_character.deaths) + "/" + str(_character.assists)
+	)
 	cs_display.text = str(_character.minion_kills)
 
 	hp_bar.value = _character.current_stats.health
@@ -60,7 +64,9 @@ func _process(_delta: float) -> void:
 	mana_bar.max_value = _character.maximum_stats.mana
 
 	player_level_number.text = str(_character.level)
-	player_display.tooltip_text = "XP: " + str(_character.level_exp) + "/" + str(_character.required_exp)
+	player_display.tooltip_text = (
+		"XP: " + str(_character.level_exp) + "/" + str(_character.required_exp)
+	)
 
 	if _character.items_changed or first_draw_iteration:
 		_character.items_changed = false
@@ -75,7 +81,7 @@ func _update_items():
 		item.queue_free()
 
 	for index in range(_character.passive_item_slots):
-		var item_box : Node = null
+		var item_box: Node = null
 		if index < _character.item_slots_passive.size():
 			var item = _character.item_slots_passive[index] as Item
 			var icon = _get_item_texture(item)
@@ -112,7 +118,7 @@ func _get_item_texture(item: Item = null) -> Texture2D:
 	return icon
 
 
-func _create_item_box(icon: Texture2D, tooltip : String, text: String):
+func _create_item_box(icon: Texture2D, tooltip: String, text: String):
 	var item_box = item_box_scene.instantiate()
 	if item_box == null:
 		print("Failed to instantiate item box")
@@ -147,7 +153,7 @@ func _create_item_box(icon: Texture2D, tooltip : String, text: String):
 func _set_icons():
 	if waiting_for_character:
 		return
-	
+
 	waiting_for_character = true
 
 	while _character == null:
@@ -157,7 +163,7 @@ func _set_icons():
 		elif _char != null:
 			_character = _char
 			break
-		
+
 		print("Character not found")
 
 	var player_icon_id = RegistryManager.units().get_element(_character.unit_id).get_icon_id()
@@ -176,7 +182,6 @@ func _set_icons():
 		mana_bar.show()
 	else:
 		mana_bar.hide()
-
 
 	player_display.mouse_filter = Control.MOUSE_FILTER_STOP
 

@@ -4,20 +4,26 @@ extends Control
 @onready var ExitBtn = $SplitContainer/PanelContainer2/GridContainer/ExitBtn
 
 # display setting element
-@onready var fullscreen_toggle = $SplitContainer/PanelContainer/TabContainer/SETTINGS_TAB_DISPLAY/FullscreenToggleBtn
+@onready
+var fullscreen_toggle = $SplitContainer/PanelContainer/TabContainer/SETTINGS_TAB_DISPLAY/FullscreenToggleBtn
 
 # camera setting elements
-@onready var cam_speed_slider = $SplitContainer/PanelContainer/TabContainer/SETTINGS_TAB_CAMERA/cam_speed_slider
-@onready var edge_margin_slider = $SplitContainer/PanelContainer/TabContainer/SETTINGS_TAB_CAMERA/edge_margin_slider
-@onready var max_zoom_slider = $SplitContainer/PanelContainer/TabContainer/SETTINGS_TAB_CAMERA/max_zoom_slider
-@onready var cam_centered_toggle = $SplitContainer/PanelContainer/TabContainer/SETTINGS_TAB_CAMERA/CamCenteredToggleBtn
-@onready var cam_pan_sesitivity_slider = $SplitContainer/PanelContainer/TabContainer/SETTINGS_TAB_CAMERA/cam_pan_sesitivity_slider
+@onready
+var cam_speed_slider = $SplitContainer/PanelContainer/TabContainer/SETTINGS_TAB_CAMERA/cam_speed_slider
+@onready
+var edge_margin_slider = $SplitContainer/PanelContainer/TabContainer/SETTINGS_TAB_CAMERA/edge_margin_slider
+@onready
+var max_zoom_slider = $SplitContainer/PanelContainer/TabContainer/SETTINGS_TAB_CAMERA/max_zoom_slider
+@onready
+var cam_centered_toggle = $SplitContainer/PanelContainer/TabContainer/SETTINGS_TAB_CAMERA/CamCenteredToggleBtn
+@onready
+var cam_pan_sesitivity_slider = $SplitContainer/PanelContainer/TabContainer/SETTINGS_TAB_CAMERA/cam_pan_sesitivity_slider
 
 
 func _ready():
 	hide()
 	visibility_changed.connect(on_show)
-	
+
 	ExitBtn.pressed.connect(_on_game_close_pressed)
 	ConfirmBtn.pressed.connect(_on_confirm_changes)
 
@@ -25,24 +31,24 @@ func _ready():
 func _input(event):
 	if not event.is_action_pressed("player_pause"):
 		return
-	
+
 	if visible:
 		hide()
 	else:
 		# make sure we aren't already in a different menu
 		if Config.in_focued_menu:
 			return
-		
+
 		show()
- 
+
 
 func on_show():
 	Config.in_focued_menu = visible
 	if not visible:
 		return
-	
+
 	fullscreen_toggle.button_pressed = Config.graphics_settings.is_fullscreen
-	
+
 	cam_speed_slider.value = Config.camera_settings.cam_speed
 	cam_pan_sesitivity_slider.value = Config.camera_settings.cam_pan_sensitivity
 	edge_margin_slider.value = Config.camera_settings.edge_margin
@@ -67,13 +73,13 @@ func _on_confirm_changes():
 	new_camera_settings.cam_pan_sensitivity = cam_pan_sesitivity_slider.value
 
 	Config.change_camera_settings(new_camera_settings)
-	
+
 	# graphics settings
 	var new_graphics_settings = GraphicsSettings.new()
 
 	new_graphics_settings.is_fullscreen = fullscreen_toggle.button_pressed
 
 	Config.change_graphics_settings(new_graphics_settings)
-	
+
 	# hide the settings menu
 	hide()

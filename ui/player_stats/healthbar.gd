@@ -2,6 +2,7 @@ extends ProgressBar
 
 var camera: Camera3D
 
+
 func _ready():
 	camera = get_viewport().get_camera_3d()
 	show_percentage = false
@@ -9,7 +10,7 @@ func _ready():
 
 
 func _process(_delta):
-	var parent : CharacterBody3D = get_parent()
+	var parent: CharacterBody3D = get_parent()
 	if value > 0 && parent.is_visible_in_tree():
 		# TODO: only show health of the lowest tier structure within a given lane
 		show()
@@ -29,4 +30,3 @@ func _process(_delta):
 func _update_healthbar(unit: Unit):
 	value = unit.current_stats.health
 	max_value = unit.maximum_stats.health
-
