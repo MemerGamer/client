@@ -1,13 +1,12 @@
 extends MapFeature
 class_name PlayerSpawnerFeature
 
-
 var team: int
 
-var respawn_enabled : bool = true
-var respawn_time : float = 30
-var respawn_time_growth_level : float = 5
-var respawn_time_growth_time : float = 0.1
+var respawn_enabled: bool = true
+var respawn_time: float = 30
+var respawn_time_growth_level: float = 5
+var respawn_time_growth_time: float = 0.1
 
 
 func _init():
@@ -37,7 +36,7 @@ func spawn(feature_data: Dictionary, parent: Node) -> bool:
 
 	if spawn_behaviour.has("respawn_time"):
 		respawn_time = float(spawn_behaviour["respawn_time"])
-	
+
 	if spawn_behaviour.has("respawn_time_growth_level"):
 		respawn_time_growth_level = float(spawn_behaviour["respawn_time_growth_level"])
 
@@ -55,7 +54,9 @@ func spawn(feature_data: Dictionary, parent: Node) -> bool:
 
 
 func get_respawn_time(level: int, game_time: float) -> float:
-	return respawn_time + (level * respawn_time_growth_level) + (game_time * respawn_time_growth_time)
+	return (
+		respawn_time + (level * respawn_time_growth_level) + (game_time * respawn_time_growth_time)
+	)
 
 
 func get_spawn_position(index: int = 0) -> Vector3:

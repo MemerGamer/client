@@ -1,7 +1,7 @@
 extends Node
 class_name MapNode
 
-enum EndCondition{
+enum EndCondition {
 	TEAM_ELIMINATION,
 	STRUCTURE_DESTRUCTION,
 }
@@ -14,7 +14,7 @@ enum EndCondition{
 @export var map_features: Node
 @export var player_spawns = {}
 
-@export var time_elapsed : float = 0
+@export var time_elapsed: float = 0
 
 var Characters = {}
 var player_cooldowns = {}
@@ -36,20 +36,20 @@ const dmg_popup_scene = preload("res://scenes/effects/damage_popup.tscn")
 func _ready():
 	_load_config()
 	_setup_nodes()
-	
+
 	# TODO: make sure all clients have the map fully loaded before
 	# continueing here. For now we just do a 1 seconds delay.
 	await get_tree().create_timer(1).timeout
-	
+
 	if not Config.is_dedicated_server:
 		client_setup()
-	
+
 	if not multiplayer.is_server():
 		return
 
 	for player in connected_players:
 		var spawn_args = {}
-		
+
 		spawn_args["name"] = str(player["peer_id"])
 		spawn_args["character"] = player["character"]
 		spawn_args["id"] = player["peer_id"]
@@ -60,10 +60,10 @@ func _ready():
 		spawn_args["passive_item_slots"] = player_passive_item_slots
 
 		last_player_index += 1
-		
+
 		var new_char = $CharacterSpawner.spawn(spawn_args)
-		new_char.look_at(Vector3(0,0,0))
-		Characters[player['peer_id']] = new_char
+		new_char.look_at(Vector3(0, 0, 0))
+		Characters[player["peer_id"]] = new_char
 
 
 func _physics_process(delta):
@@ -75,15 +75,15 @@ func _setup_nodes():
 	character_container.name = "Characters"
 	add_child(character_container)
 	character_container = get_node("Characters")
-	
+
 	var character_spawner = MultiplayerSpawner.new()
-	character_spawner.name ="CharacterSpawner"
+	character_spawner.name = "CharacterSpawner"
 	character_spawner.spawn_path = NodePath("../Characters")
 	character_spawner.spawn_limit = 50
 	character_spawner.spawn_function = _spawn_character
-	
+
 	add_child(character_spawner)
-	
+
 	var abilities_node = Node.new()
 	abilities_node.name = "Abilities"
 	add_child(abilities_node)
@@ -93,23 +93,22 @@ func _setup_nodes():
 	add_child(damage_popup_node)
 
 	var damage_popup_spawner = MultiplayerSpawner.new()
-	damage_popup_spawner.name ="DamagePopupSpawner"
+	damage_popup_spawner.name = "DamagePopupSpawner"
 	damage_popup_spawner.spawn_path = NodePath("../DamagePopups")
 	damage_popup_spawner.spawn_limit = 999
 	damage_popup_spawner.spawn_function = _spawn_damage_popup
 	add_child(damage_popup_spawner)
-	
+
 
 func _spawn_character(args):
 	var spawn_args = args as Dictionary
-	
+
 	if not spawn_args:
 		print("Error character spawn args could now be parsed as dict!")
 		return null
-	
+
 	print("loading character:" + spawn_args["character"])
-	
-	
+
 	var char_data = RegistryManager.units().get_element(spawn_args["character"]) as UnitData
 	if not char_data:
 		print("Error character data could not be found in registry!")
@@ -129,11 +128,11 @@ func _spawn_character(args):
 
 func _spawn_damage_popup(args):
 	var spawn_args = args as Dictionary
-	
+
 	if not spawn_args:
 		print("Error damage popup spawn args could now be parsed as dict!")
 		return null
-	
+
 	var new_popup = dmg_popup_scene.instantiate()
 	new_popup.spawn_position = spawn_args["position"] as Vector3
 	new_popup.damage_value = int(spawn_args["value"])
@@ -170,19 +169,20 @@ func _load_config():
 				if not condition.has("team"):
 					print("Team elimination condition is missing team")
 					continue
-				end_conditions.append({
-					"type": EndCondition.TEAM_ELIMINATION,
-					"team": condition["team"]
-				})
+				end_conditions.append(
+					{"type": EndCondition.TEAM_ELIMINATION, "team": condition["team"]}
+				)
 			"structure_destruction":
 				if not condition.has("structure"):
 					print("Structure destruction condition is missing structure")
 					continue
-				end_conditions.append({
-					"type": EndCondition.STRUCTURE_DESTRUCTION,
-					"structure_name": condition["structure_name"],
-					"loosing_team": condition["loosing_team"]
-				})
+				end_conditions.append(
+					{
+						"type": EndCondition.STRUCTURE_DESTRUCTION,
+						"structure_name": condition["structure_name"],
+						"loosing_team": condition["loosing_team"]
+					}
+				)
 			_:
 				print("Unknown end condition type: " + type)
 
@@ -200,25 +200,21 @@ func client_setup():
 	# The player rig will ask the server for their character
 	var player_rig = player_controller.instantiate()
 	add_child(player_rig)
-	
+
 	# instantiate and add all the UI components
 	add_child(player_desktop_settings.instantiate())
 
 	var hud = player_desktop_hud.instantiate()
 	hud._map = self
 	add_child(hud)
-	
+
 	var item_shop = player_item_shop.instantiate()
 	item_shop.player_instance = player_rig
 	add_child(item_shop)
 
 
 func on_unit_damaged(unit: Unit, damage: int, damage_type: Unit.DamageType):
-	var damage_popup_args = {
-		"position": unit.server_position,
-		"value": damage,
-		"type": damage_type
-	}
+	var damage_popup_args = {"position": unit.server_position, "value": damage, "type": damage_type}
 	$DamagePopupSpawner.spawn(damage_popup_args)
 
 
@@ -233,15 +229,15 @@ func on_player_death(player_id: int):
 	for condition in end_conditions:
 		if condition["type"] != EndCondition.TEAM_ELIMINATION:
 			continue
-		
+
 		if team != condition["team"]:
 			continue
-		
+
 		team_elimination = true
 		for _char in Characters.values():
 			if _char.name == str(player_id):
 				continue
-			
+
 			if _char.team != team:
 				continue
 
@@ -263,7 +259,7 @@ func on_player_death(player_id: int):
 
 @rpc("any_peer")
 func client_ready():
-	print(connected_players);
+	print(connected_players)
 	print(multiplayer.get_remote_sender_id())
 
 
@@ -284,10 +280,15 @@ func try_purchase_item(item_name):
 		print("Failed to find item: " + str(item_name))
 		return
 
-	var tried_purchase : Dictionary = item.try_purchase(character.item_list)
+	var tried_purchase: Dictionary = item.try_purchase(character.item_list)
 	var purchase_cost = tried_purchase["cost"]
 	if character.current_gold < purchase_cost:
-		print("Missing %d gold to purchase item: %s" % [purchase_cost - character.current_gold, item_name])
+		print(
+			(
+				"Missing %d gold to purchase item: %s"
+				% [purchase_cost - character.current_gold, item_name]
+			)
+		)
 		return
 
 	var new_inventory = tried_purchase["owned_items"] as Array[Item]
@@ -330,7 +331,7 @@ func target(target_path):
 
 	# Dont Kill Yourself
 	if target_unit == character:
-		print_debug("That's you ya idjit") # :O
+		print_debug("That's you ya idjit")  # :O
 		return
 
 	character.change_state("Attacking", target_unit)
@@ -345,21 +346,29 @@ func spawn_ability(ability_name, ability_type, ability_pos, ability_mana_cost, c
 		print("Not enough mana!")
 		return
 
-	if player_cooldowns[peer_id][ab_id-1] != 0:
+	if player_cooldowns[peer_id][ab_id - 1] != 0:
 		print("This ability is on cooldown! Wait " + str(cooldown) + " seconds!")
 		return
-	
-	player_cooldowns[peer_id][ab_id-1] = cooldown
-	free_ability(cooldown, peer_id, ab_id-1)
+
+	player_cooldowns[peer_id][ab_id - 1] = cooldown
+	free_ability(cooldown, peer_id, ab_id - 1)
 	character.mana -= ability_mana_cost
 	print(character.mana)
 
-	rpc_id(peer_id, "spawn_local_effect", ability_name, ability_type, ability_pos, character.position, character.team)
+	rpc_id(
+		peer_id,
+		"spawn_local_effect",
+		ability_name,
+		ability_type,
+		ability_pos,
+		character.position,
+		character.team
+	)
 
 
 @rpc("any_peer", "call_local")
 func spawn_local_effect(ability_name, ability_type, ability_pos, player_pos, player_team) -> void:
-	var ability_scene = load("res://effects/abilities/"+ability_name+".tscn").instantiate()
+	var ability_scene = load("res://effects/abilities/" + ability_name + ".tscn").instantiate()
 
 	match ability_type:
 		0:
@@ -376,7 +385,7 @@ func spawn_local_effect(ability_name, ability_type, ability_pos, player_pos, pla
 @rpc("any_peer", "call_local")
 func respawn(character: Unit):
 	var spawner = player_spawns[str(character.team)]
-	
+
 	character.server_position = spawner.get_spawn_position(character.index)
 	character.position = character.server_position
 
@@ -391,10 +400,10 @@ func free_ability(cooldown: float, peer_id: int, ab_id: int) -> void:
 	player_cooldowns[peer_id][ab_id] = 0
 
 
-func get_character(id:int):
+func get_character(id: int):
 	var character = Characters.get(id)
 	if not character:
 		print_debug("Failed to find character")
 		return false
-	
+
 	return character

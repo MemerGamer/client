@@ -29,7 +29,7 @@ func load_from_json(_json: Dictionary) -> bool:
 	var new_unit = UnitData.from_dict(_json, self)
 	if not new_unit:
 		return false
-	
+
 	var unit_id_str: String = new_unit.get_id().to_string()
 	_internal_values[unit_id_str] = new_unit
 

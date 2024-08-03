@@ -4,24 +4,24 @@ class_name UnitSpawnerFeature
 # serialized data stats
 var team: int
 
-var unit_type : String = ""
-var unit_level : int = 1
-var unit_level_growth : int = 1
-var unit_level_growth_time : float = 0
+var unit_type: String = ""
+var unit_level: int = 1
+var unit_level_growth: int = 1
+var unit_level_growth_time: float = 0
 
-var initial_cooldown : float = 30
-var wave_interval : float = 60
-var wave_size : int = 1
-var wave_growth : int = 1
+var initial_cooldown: float = 30
+var wave_interval: float = 60
+var wave_size: int = 1
+var wave_growth: int = 1
 
-var require_clear : bool = false
+var require_clear: bool = false
 
 # current spawner values
-var current_wave : int = 0
+var current_wave: int = 0
 
-var spawned_units : Node
-var spawn_timer : Timer
-var unit_multiplayer_spawner : MultiplayerSpawner
+var spawned_units: Node
+var spawn_timer: Timer
+var unit_multiplayer_spawner: MultiplayerSpawner
 
 
 func _init():
@@ -46,7 +46,7 @@ func spawn(feature_data: Dictionary, parent: Node) -> bool:
 		return false
 
 	var spawn_behaviour: Dictionary = feature_data["spawn_behaviour"]
-	
+
 	if not spawn_behaviour.has("unit_type"):
 		print("Spawn is missing unit_type")
 		return false
@@ -130,7 +130,7 @@ func _on_unit_death(unit: Unit):
 
 	if not require_clear:
 		return
-	
+
 	if spawned_units.get_child_count() == 0:
 		var _next_cd = _get_wave_cooldown()
 		print("Next wave in " + str(_next_cd) + " seconds")
@@ -140,7 +140,7 @@ func _on_unit_death(unit: Unit):
 
 func _spawn_wave():
 	var spawn_time = map.time_elapsed
-	
+
 	var _size = _get_wave_size(current_wave, spawn_time)
 	print("Spawning wave of " + str(_size) + " units")
 
@@ -155,11 +155,11 @@ func _spawn_wave():
 		}
 
 		get_tree().create_timer(i * 0.5).timeout.connect(
-			func (): unit_multiplayer_spawner.spawn(spawn_args)
+			func(): unit_multiplayer_spawner.spawn(spawn_args)
 		)
-	
+
 	current_wave += 1
-	
+
 	if not require_clear:
 		var _next_cd = _get_wave_cooldown()
 		print("Next wave in " + str(_next_cd) + " seconds")
@@ -182,13 +182,11 @@ func _multiplayer_spawn_unit(data: Dictionary):
 		return
 
 	var _unit = _unit_data.spawn(data)
-	_unit.died.connect(
-		func(): _on_unit_death(_unit)
-	)
+	_unit.died.connect(func(): _on_unit_death(_unit))
 
 	if map == null:
 		print("Map is null not setting it in spawner")
 		return _unit
-	
+
 	_unit.map = map
 	return _unit

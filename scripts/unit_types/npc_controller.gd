@@ -1,7 +1,6 @@
 extends Node
 class_name NPC_Controller
 
-
 var aggro_type: UnitData.AggroType
 var aggro_distance: float = 1.0
 var deaggro_distance: float = 3.0
@@ -10,6 +9,7 @@ var aggro_collider: Area3D
 var deaggro_collider: Area3D
 
 var controlled_unit: Unit
+
 
 func _ready():
 	if not controlled_unit:
@@ -58,11 +58,11 @@ func _process(_delta):
 		var potential_collisions = aggro_collider.get_overlapping_bodies()
 		for body in potential_collisions:
 			_enter_aggro_range(body)
-		
+
 		if not controlled_unit.target_entity:
 			controlled_unit.advance_state()
 			return
-	
+
 	if not controlled_unit.target_entity.is_alive:
 		controlled_unit.target_entity = null
 		controlled_unit.advance_state()
@@ -70,18 +70,22 @@ func _process(_delta):
 
 
 func _enter_aggro_range(body: PhysicsBody3D):
-	if aggro_type != UnitData.AggroType.AGGRESSIVE: return
-	if controlled_unit.target_entity: return
+	if aggro_type != UnitData.AggroType.AGGRESSIVE:
+		return
+	if controlled_unit.target_entity:
+		return
 
 	var _collided_unit = body as Unit
 	if _collided_unit == null:
 		return
-	
-	if _collided_unit == controlled_unit: return
-	if _collided_unit.team == controlled_unit.team: return
-	
+
+	if _collided_unit == controlled_unit:
+		return
+	if _collided_unit.team == controlled_unit.team:
+		return
+
 	print("Now targeting:" + _collided_unit.name)
-	
+
 	controlled_unit.target_entity = body as Unit
 
 	# Make the attacking work in the future, for now just follow the target
@@ -89,6 +93,7 @@ func _enter_aggro_range(body: PhysicsBody3D):
 
 
 func _exit_deaggro_range(body: PhysicsBody3D):
-	if body != controlled_unit.target_entity: return
-	
+	if body != controlled_unit.target_entity:
+		return
+
 	controlled_unit.change_state("Idle", null)

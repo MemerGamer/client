@@ -12,23 +12,23 @@ var _json_type: String = ""
 
 
 func _init():
-    pass
+	pass
 
 
 func contains(_item: String) -> bool:
-    return false
+	return false
 
 
 func get_element(_item: String):
-    return null
+	return null
 
 
 func load_from_json(_json: Dictionary) -> bool:
-    return false
+	return false
 
 
 func assure_validity():
-    pass
+	pass
 
 
 # The following functions aren't meant to be overwriten by subclasses, but rather
@@ -36,8 +36,8 @@ func assure_validity():
 
 
 func get_json_type() -> String:
-    return _json_type
+	return _json_type
 
 
 func can_load_from_json(_json: Dictionary) -> bool:
-    return _json_type == _json["type"]
+	return _json_type == _json["type"]

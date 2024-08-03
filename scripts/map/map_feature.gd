@@ -1,10 +1,10 @@
 extends Node3D
 class_name MapFeature
 
-
 var feature_type: String = ""
 var feature_name: String = ""
 var map: Node
+
 
 static func spawn_feature(feature_data: Dictionary, parent: Node) -> bool:
 	if not feature_data.has("type"):
@@ -54,11 +54,11 @@ static func _get_position(node_name: String, parent: Node, fallback_data: Dictio
 		parent.remove_child(feature_node)
 		return _pos
 
-	var _position = Vector3(0,0,0)
+	var _position = Vector3(0, 0, 0)
 
 	if fallback_data == null:
 		return null
-		
+
 	var x = 0
 	var y = 0
 	var z = 0

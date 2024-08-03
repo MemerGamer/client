@@ -288,17 +288,17 @@ func _setup_scene_elements():
 	action_effects = get_node("ActionEffects")
 
 	# set up the navitation agent
-	var _nav_agent = NavigationAgent3D.new()
-	_nav_agent.name = "NavigationAgent3D"
-	add_child(_nav_agent)
+	var navi_agent = NavigationAgent3D.new()
+	navi_agent.name = "NavigationAgent3D"
+	add_child(navi_agent)
 	nav_agent = get_node("NavigationAgent3D")
 
 	# set up the healthbar
 	var healthbar_node = healthbar_scene.instantiate()
 	healthbar_node.name = "Healthbar"
 	add_child(healthbar_node)
-	healthbar_node._update_healthbar(self)
-	current_stats_changed.connect(func(): healthbar_node._update_healthbar(self))
+	healthbar_node.update_healthbar(self)
+	current_stats_changed.connect(func(): healthbar_node.update_healthbar(self))
 
 	# set up the attack range visualizer
 	var attack_range_mesh = TorusMesh.new()
@@ -699,7 +699,6 @@ func can_take_damage() -> bool:
 func _update_range_visualizer():
 	attack_range_visualizer.mesh.inner_radius = current_stats.attack_range * 0.0099
 	attack_range_visualizer.mesh.outer_radius = current_stats.attack_range * 0.01
-
 
 
 func _passive_regen_handler():

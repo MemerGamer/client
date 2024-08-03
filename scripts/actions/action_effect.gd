@@ -15,14 +15,13 @@ extends Node
 ## implement specific action effects.
 class_name ActionEffect
 
-
 ## The activation state of the action effect
 ## [br][br]
 ## This is used to determine what the action effect is currently doing
 ## and what it should do next upon activation.
 ## Note that this set of states is not exhaustive and might get extended
 ## in the future. Don't rely on the exact values of this enum.
-enum ActivationState{
+enum ActivationState {
 	## Indicates that the action effect is not doing anything
 	NONE,
 	## Indicates that the action effect is ready to be activated
@@ -43,13 +42,12 @@ enum ActivationState{
 	COOLDOWN
 }
 
-
 ## The type of an an active ability.
 ## [br][br]
 ## This is used to determine how certain effects should be applied.
 ## For example, a single targeted ability should only affect one target
 ## while an area untargeted ability should affect all units in an area.
-enum AbilityType{
+enum AbilityType {
 	## Indicates that the ability is passive and can not be activated.
 	PASSIVE,
 	## Indicates that the ability is targeted and can only affect one unit.
@@ -67,24 +65,19 @@ enum AbilityType{
 	AREA_CONTINUOUS
 }
 
-
 # Common fields for all action effects
 # These are all protected fields and should not be accessed directly
 # outside of the action effect class and its subclasses.
 
-
 ## The current activation state of the action effect
 var _activation_state: ActivationState = ActivationState.NONE
-
 
 ## The type of ability described by the action effect
 var _ability_type: AbilityType = AbilityType.PASSIVE
 
-
 ## Indicates if the action effect has been loaded and is ready to be used
 ## This should be false until _from_dict has been called
 var _is_loaded: bool = false
-
 
 ## The display id of the action effect
 ## This field is used to have a unique name for action effects
@@ -93,7 +86,6 @@ var _is_loaded: bool = false
 ## and to identify the action effect in the game world.
 ## This field is set in the generic _from_dict function.
 var _display_id: Identifier = null
-
 
 ## Indicates if the action effect is exclusive.
 ## This means a unit can only have one effect with the
@@ -114,14 +106,19 @@ static func from_dict(_dict: Dictionary) -> ActionEffect:
 		print("Could not create action effect from dictionary. Dictionary has no base_id key.")
 		return null
 
-	var _instance : ActionEffect = null
+	var _instance: ActionEffect = null
 	match _dict["base_id"]:
 		"ActionEffect":
-			print("Could not create action effect from dictionary. Class is the base class: " + _dict["base_id"])
+			print(
+				(
+					"Could not create action effect from dictionary. Class is the base class: "
+					+ _dict["base_id"]
+				)
+			)
 			return null
 		"OnHitDamageEffect":
 			_instance = OnHitDamageEffect.new()
-		
+
 		_:
 			print("Invalid action effect class name: " + _dict["base_id"])
 			return null
@@ -136,7 +133,7 @@ static func from_dict(_dict: Dictionary) -> ActionEffect:
 	if not _instance._from_dict(_dict):
 		print("Could not create action effect from dictionary. Could not load data.")
 		return null
-	
+
 	return _instance
 
 

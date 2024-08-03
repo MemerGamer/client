@@ -27,6 +27,6 @@ func _process(_delta):
 		hide()
 
 
-func _update_healthbar(unit: Unit):
+func update_healthbar(unit: Unit):
 	value = unit.current_stats.health
 	max_value = unit.maximum_stats.health

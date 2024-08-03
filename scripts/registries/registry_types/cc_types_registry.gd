@@ -1,7 +1,6 @@
 extends RegistryBase
 class_name CCTypesRegistry
 
-
 const CC_MASK_MOVEMENT = 0b1
 const CC_MASK_CAST_MOBILITY = 0b10
 const CC_MASK_ATTACK = 0b100
@@ -40,7 +39,9 @@ func _init():
 	_load_default_cc("openchamp:silenced", ["cast", "cast_mobility"])
 	_load_default_cc("openchamp:rooted", ["movement", "cast_mobility"])
 	_load_default_cc("openchamp:stunned", ["cast", "attack", "cast_mobility", "movement"])
-	_load_default_cc("openchamp:stasis", ["take_damage", "cast", "attack", "cast_mobility", "movement"])
+	_load_default_cc(
+		"openchamp:stasis", ["take_damage", "cast", "attack", "cast_mobility", "movement"]
+	)
 
 
 func contains(_item: String) -> bool:
@@ -73,7 +74,7 @@ func load_from_json(_json: Dictionary) -> bool:
 		if data == null:
 			print("Error: CC Type data is not a dictionary.")
 			continue
-		
+
 		if not data.has("id"):
 			print("Error: CC Type data has no ID.")
 			continue
@@ -94,7 +95,7 @@ func load_from_json(_json: Dictionary) -> bool:
 			cc_icon_res = "texture://" + (data["icon"] as String)
 		else:
 			print("Error: no icon for CC Type " + str(data["id"]) + ", using the fallback icon.")
-		
+
 		var cc_icon := Identifier.for_resource(cc_icon_res)
 
 		if not data.has("impairments"):

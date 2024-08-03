@@ -3,6 +3,7 @@ class_name GraphicsSettings
 
 @export var is_fullscreen: bool = true
 
+
 func _init(_config: ConfigFile = null) -> void:
 	if _config == null:
 		return
@@ -20,12 +21,10 @@ func copy() -> GraphicsSettings:
 	copied_group.is_fullscreen = is_fullscreen
 
 	return copied_group
-	
+
 
 func differs(other: GraphicsSettings) -> bool:
 	if other == null:
 		return true
-	
-	return (
-		is_fullscreen != other.is_fullscreen
-	)
+
+	return is_fullscreen != other.is_fullscreen

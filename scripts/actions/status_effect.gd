@@ -1,7 +1,6 @@
 class_name UnitEffect
 extends Timer
 
-
 var cc_mask: int = 0
 var effect_id: Identifier = null
 var icon_id: Identifier = null

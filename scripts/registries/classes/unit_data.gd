@@ -48,7 +48,7 @@ static func from_dict(_json: Dictionary, _registry: RegistryBase):
 	if not _registry:
 		print("UnitData: No registry provided.")
 		return false
-	
+
 	if not _registry.can_load_from_json(_json):
 		print("Wrong JSON type.")
 		return false
@@ -85,7 +85,9 @@ static func from_dict(_json: Dictionary, _registry: RegistryBase):
 		_unit_model_id = Identifier.for_resource("unit://" + raw_model_id)
 	else:
 		if _is_character:
-			_unit_model_id = Identifier.for_resource("unit://" + _unit_id.get_group() + ":characters/" + _unit_id.get_name())
+			_unit_model_id = Identifier.for_resource(
+				"unit://" + _unit_id.get_group() + ":characters/" + _unit_id.get_name()
+			)
 		else:
 			_unit_model_id = Identifier.for_resource("unit://" + _unit_id_str)
 
@@ -99,16 +101,21 @@ static func from_dict(_json: Dictionary, _registry: RegistryBase):
 		_unit_icon_id = Identifier.for_resource("texture://" + raw_icon_id)
 	else:
 		if _is_character:
-			_unit_icon_id = Identifier.for_resource("texture://" + _unit_id.get_group() + ":units/characters/" + _unit_id.get_name() + "/icon")
+			_unit_icon_id = Identifier.for_resource(
+				(
+					"texture://"
+					+ _unit_id.get_group()
+					+ ":units/characters/"
+					+ _unit_id.get_name()
+					+ "/icon"
+				)
+			)
 		else:
-			_unit_icon_id = Identifier.for_resource("texture://" + _unit_id.get_group() + ":units/" + _unit_id.get_name() + "/icon")
+			_unit_icon_id = Identifier.for_resource(
+				"texture://" + _unit_id.get_group() + ":units/" + _unit_id.get_name() + "/icon"
+			)
 
-
-	var new_unit = UnitData.new(
-		_unit_id,
-		_unit_model_id,
-		_unit_icon_id
-	)
+	var new_unit = UnitData.new(_unit_id, _unit_model_id, _unit_icon_id)
 
 	var raw_stats = _json_data["base_stats"]
 	if not (raw_stats is Dictionary):
@@ -153,32 +160,25 @@ static func from_dict(_json: Dictionary, _registry: RegistryBase):
 			_projectile_config["model"] = str(raw_projectile_config["model"])
 			_projectile_config["speed"] = float(raw_projectile_config["speed"])
 			_projectile_config["model_scale"] = JsonHelper.get_vector3(
-				raw_projectile_config,
-				"model_scale",
-				Vector3(1.0, 1.0, 1.0)
+				raw_projectile_config, "model_scale", Vector3(1.0, 1.0, 1.0)
 			)
 			_projectile_config["model_rotation"] = JsonHelper.get_vector3(
-				raw_projectile_config,
-				"model_rotation",
-				Vector3(0.0, 0.0, 0.0)
+				raw_projectile_config, "model_rotation", Vector3(0.0, 0.0, 0.0)
 			)
 			_projectile_config["spawn_offset"] = JsonHelper.get_vector3(
-				raw_projectile_config,
-				"spawn_offset",
-				Vector3(0.0, 0.0, 0.0)
+				raw_projectile_config, "spawn_offset", Vector3(0.0, 0.0, 0.0)
 			)
 			_projectile_config["damage_type"] = JsonHelper.get_optional_enum(
-				raw_projectile_config,
-				"damage_type",
-				Unit.ParseDamageType,
-				Unit.DamageType.PHYSICAL
+				raw_projectile_config, "damage_type", Unit.ParseDamageType, Unit.DamageType.PHYSICAL
 			)
 
 			new_unit.projectile_config = _projectile_config
 
 	new_unit.windup_fraction = JsonHelper.get_optional_number(_json_data, "windup_fraction", 0.1)
 
-	new_unit.aggro_type = JsonHelper.get_optional_enum(_json_data, "aggro_type", PareAggroType, AggroType.PASSIVE)
+	new_unit.aggro_type = JsonHelper.get_optional_enum(
+		_json_data, "aggro_type", PareAggroType, AggroType.PASSIVE
+	)
 	new_unit.aggro_distance = JsonHelper.get_optional_number(_json_data, "aggro_distance", 1.0)
 	new_unit.deaggro_distance = JsonHelper.get_optional_number(_json_data, "deaggro_distance", 3.0)
 
@@ -193,7 +193,7 @@ func get_model_id() -> Identifier:
 	if AssetIndexer.get_asset_path(model_id) == "":
 		print("Unit (%s): Model asset not found." % id.to_string())
 		return Identifier.for_resource("unit://openchamp:fallback")
-	
+
 	return model_id
 
 
@@ -201,7 +201,7 @@ func get_icon_id() -> Identifier:
 	if AssetIndexer.get_asset_path(icon_id) == "":
 		print("Unit (%s): Icon asset not found." % id.to_string())
 		return Identifier.for_resource("texture://openchamp:units/fallback/icon")
-	
+
 	return icon_id
 
 
@@ -216,13 +216,15 @@ func get_stat_growth() -> StatCollection:
 func is_valid(_registry: RegistryBase = null) -> bool:
 	if not id.is_valid():
 		return false
-			
+
 	return true
 
 
 func spawn(spawn_args: Dictionary):
 	var model_id_str = get_model_id().get_resource_id()
-	print("Character (%s): Spawning character using the model: (%s)" % [id.to_string(), model_id_str])
+	print(
+		"Character (%s): Spawning character using the model: (%s)" % [id.to_string(), model_id_str]
+	)
 
 	var model_scene = load(model_id_str)
 	if model_scene == null:

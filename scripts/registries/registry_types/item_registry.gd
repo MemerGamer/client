@@ -1,9 +1,10 @@
 extends RegistryBase
 class_name ItemRegistry
 
-@export var highest_item_tier : int = -1
+@export var highest_item_tier: int = -1
 
 var _internal_values: Dictionary = {}
+
 
 func _init():
 	_json_type = "item"
@@ -17,37 +18,35 @@ func get_element(_item: String):
 	if not contains(_item):
 		print("Item (%s): Item not found in item registry." % _item)
 		return null
-	
+
 	return _internal_values[_item]
 
 
 func get_all_where(condition: Callable) -> Array[Item]:
-	var item_list : Array[Item] = []
+	var item_list: Array[Item] = []
 	var all_items = _internal_values.values()
 	for _item in all_items:
 		if condition.call(_item):
 			item_list.append(_item)
-	
+
 	return item_list
 
 
 func get_all_in_tier(searched_tier: int) -> Array[Item]:
 	if searched_tier > highest_item_tier:
 		return []
-	
-	return get_all_where(func (_item:Item) -> bool:
-		return _item.item_tier == searched_tier
-	)
-	
+
+	return get_all_where(func(_item: Item) -> bool: return _item.item_tier == searched_tier)
+
 
 func assure_validity():
 	var item_names = _internal_values.keys()
 	for item_name in item_names:
-		var item : Item = _internal_values[item_name]
+		var item: Item = _internal_values[item_name]
 		if not item.is_valid(self):
 			print("Item (%s): Invalid item." % item_name)
 			_internal_values.erase(item_name)
-		
+
 		if item.item_tier > highest_item_tier:
 			highest_item_tier = item.item_tier
 
@@ -114,14 +113,14 @@ func load_from_json(_json: Dictionary) -> bool:
 
 	var stats = StatCollection.from_dict(raw_stats)
 
-	var loaded_effects : Array[ActionEffect] = []
+	var loaded_effects: Array[ActionEffect] = []
 	if _json_data.has("effects"):
 		var raw_effects = _json_data["effects"]
 
 		if not (raw_effects is Array):
 			print("Item (%s): Effects must be an array." % item_id_str)
 			return false
-		
+
 		for raw_effect in raw_effects:
 			var effect = ActionEffect.from_dict(raw_effect)
 			if effect == null:

@@ -1,14 +1,15 @@
 extends State
 class_name unit_move
 
-func enter(entity: Unit, args=null):
+
+func enter(entity: Unit, args = null):
 	modify(entity, args)
 
 
 func update_tick_server(entity: Unit, delta):
 	# Server Only
 	super(entity, delta)
-	
+
 	if entity.move_on_path(delta):
 		entity.advance_state()
 

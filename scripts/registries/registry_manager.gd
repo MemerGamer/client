@@ -82,17 +82,24 @@ func load_manifest(manifest: Dictionary, gamemode: String = "") -> Dictionary:
 		for registry in _RegistryList:
 			if not registry.can_load_from_json(data):
 				continue
-			
+
 			loaded = registry.load_from_json(data)
 			if loaded:
 				break
-		
+
 		if not loaded:
 			if map_config == {} and data["type"] == "map":
 				map_config = data["data"]
 			else:
-				print("No loader for '" + key + "' : '" + manifest["files"][key] +"' found or failed to load.")
-
+				print(
+					(
+						"No loader for '"
+						+ key
+						+ "' : '"
+						+ manifest["files"][key]
+						+ "' found or failed to load."
+					)
+				)
 
 	for registry in _RegistryList:
 		registry.assure_validity()

@@ -1,11 +1,10 @@
 extends Node
 class_name State
 
-
 signal change
 
 
-func enter(entity, args=null):
+func enter(entity, args = null):
 	pass
 
 
@@ -19,12 +18,14 @@ func modify(entity, args):
 
 func update(entity, _delta):
 	# Client Tick, variable based on framerate
-	if multiplayer.is_server(): return
-	
+	if multiplayer.is_server():
+		return
+
 
 func update_tick_client(entity, delta):
 	# Client tick, 60 Hz
-	if multiplayer.is_server(): return
+	if multiplayer.is_server():
+		return
 
 	# Client only
 	if entity.global_position.distance_to(entity.server_position) < 0.1:
@@ -36,4 +37,5 @@ func update_tick_client(entity, delta):
 
 func update_tick_server(entity, _delta):
 	# Server Tick, 60 Hz
-	if not multiplayer.is_server(): return
+	if not multiplayer.is_server():
+		return

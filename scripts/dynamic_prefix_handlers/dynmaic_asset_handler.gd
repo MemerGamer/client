@@ -1,8 +1,8 @@
 extends ResourceFormatLoader
 class_name DynmaicPrefixHandler
 
-
 var supported_prefixes := Identifier.get_all_content_types()
+
 
 static func get_resource_path(path: String):
 	var resource_id := Identifier.for_resource(path)
@@ -11,7 +11,7 @@ static func get_resource_path(path: String):
 		return null
 
 	var content_type := resource_id.get_content_type() as String
-	
+
 	var fixed_path := AssetIndexer.get_asset_path(resource_id) as String
 	if fixed_path == null or fixed_path == "":
 		print("Asset not found in AssetIndexer: '" + path + "'")
@@ -28,12 +28,7 @@ func _recognize_path(path: String, _type: StringName) -> bool:
 	return false
 
 
-func _load(
-	path:String,
-	_original_path:String, 
-	_use_sub_threads:bool, 
-	_cache_mode:int
-):	
+func _load(path: String, _original_path: String, _use_sub_threads: bool, _cache_mode: int):
 	var resource_stuff = DynmaicPrefixHandler.get_resource_path(path)
 	if resource_stuff == null:
 		print("Failed to get resource path for: '" + path + "'")
@@ -41,7 +36,7 @@ func _load(
 
 	var fixed_path := resource_stuff[0] as String
 	var content_type := resource_stuff[1] as String
-	
+
 	var try_result = try_resource_load(fixed_path)
 	if try_result != null:
 		return try_result
@@ -59,13 +54,13 @@ func _load(
 	return FAILED
 
 
-func _rename_dependencies(path:String, renames: Dictionary):
+func _rename_dependencies(path: String, renames: Dictionary):
 	return OK
 
 
-func try_resource_load(resource_path):	
+func try_resource_load(resource_path):
 	if ResourceLoader.exists(resource_path):
-		print("loading '"+ resource_path + "' from the ResourceLoader.")
+		print("loading '" + resource_path + "' from the ResourceLoader.")
 		var load_result = ResourceLoader.load(resource_path)
 		if load_result != null:
 			return load_result
@@ -81,13 +76,13 @@ func load_texture_from_path(fixed_path: String):
 	if loaded_image == null:
 		print("Error loading image from file.")
 		return FAILED
-	
+
 	var loaded_texture := ImageTexture.create_from_image(loaded_image)
 
 	if loaded_texture == null:
 		print("error loading dynamic texture: '" + fixed_path + "'")
 		return FAILED
-	
+
 	return loaded_texture
 
 
@@ -97,7 +92,7 @@ func load_font_from_path(fixed_path: String):
 
 	if loaded_font == null:
 		print("error loading dynamic font: '" + fixed_path + "'")
-	
+
 	return loaded_font
 
 
