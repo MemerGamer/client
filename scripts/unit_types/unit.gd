@@ -315,24 +315,7 @@ func _setup_scene_elements():
 	passive_heal_timer.autostart = true
 	passive_heal_timer.wait_time = 5.0
 	passive_heal_timer.process_callback = Timer.TIMER_PROCESS_PHYSICS
-	passive_heal_timer.timeout.connect(func ():
-		if not is_alive: return
-
-		# first we regen the mana
-		if current_stats.mana_regen > 0:
-			current_stats.mana += current_stats.mana_regen
-			if current_stats.mana > maximum_stats.mana:
-				current_stats.mana = maximum_stats.mana
-		
-		if current_stats.health_regen:
-			# then we emit the healed signal with the amount of health regen
-			# This is used to trigger extra healing effects.
-			# The healed signal will also trigger the current_stats_changed signal
-			# which will update the UI elements.
-			healed.emit(self, self, current_stats.health_regen)
-		else:
-			current_stats_changed.emit()
-	)
+	passive_heal_timer.timeout.connect(_passive_regen_handler)
 	add_child(passive_heal_timer)
 
 
@@ -700,6 +683,25 @@ func can_change_target() -> bool:
 
 func can_take_damage() -> bool:
 	return cc_state & CCTypesRegistry.CC_MASK_TAKE_DAMAGE == 0
+
+
+func _passive_regen_handler():
+	if not is_alive: return
+
+	# first we regen the mana
+	if current_stats.mana_regen > 0:
+		current_stats.mana += current_stats.mana_regen
+		if current_stats.mana > maximum_stats.mana:
+			current_stats.mana = maximum_stats.mana
+	
+	if current_stats.health_regen:
+		# then we emit the healed signal with the amount of health regen
+		# This is used to trigger extra healing effects.
+		# The healed signal will also trigger the current_stats_changed signal
+		# which will update the UI elements.
+		healed.emit(self, self, current_stats.health_regen)
+	else:
+		current_stats_changed.emit()
 
 
 func _attack_connected(caster, target, is_crit, damage_type):
