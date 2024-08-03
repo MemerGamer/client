@@ -6,25 +6,6 @@
 class_name Unit
 extends CharacterBody3D
 
-## The types of damage that can be dealt.
-enum DamageType {
-	## True damage is not reduced by any resistance.
-	TRUE = 0,
-	## Physical damage is reduced by armor.
-	PHYSICAL = 1,
-	## Magical damage is reduced by magic resist.
-	MAGICAL = 2,
-}
-
-## A dictionary that maps strings to the DamageType enum.
-## This can be used in combination with JsonHelper.get_optional_enum
-## to parse damage types from JSON.
-const ParseDamageType: Dictionary = {
-	"true": DamageType.TRUE,
-	"physical": DamageType.PHYSICAL,
-	"magical": DamageType.MAGICAL,
-}
-
 # Signals
 
 ## Emitted when the unit dies.
@@ -56,11 +37,45 @@ signal actual_damage_dealt(
 	caster: Unit, target: Unit, is_crit: bool, damage_type: DamageType, damage: int
 )
 
-## Each of these effects is a function that takes the caster, the target, the damage type, and the damage amount.
-## They should return the remaining damage after the effect has been applied.
-## The effects are applied in the order they are added to the array.
-## The remaining damage is then subject to the regular damage calculation.
-var _hit_reduction_effects: Array[Callable] = []
+## The types of damage that can be dealt.
+enum DamageType {
+	## True damage is not reduced by any resistance.
+	TRUE = 0,
+	## Physical damage is reduced by armor.
+	PHYSICAL = 1,
+	## Magical damage is reduced by magic resist.
+	MAGICAL = 2,
+}
+
+## A dictionary that maps strings to the DamageType enum.
+## This can be used in combination with JsonHelper.get_optional_enum
+## to parse damage types from JSON.
+const PARSE_DAMAGE_TYPE: Dictionary = {
+	"true": DamageType.TRUE,
+	"physical": DamageType.PHYSICAL,
+	"magical": DamageType.MAGICAL,
+}
+
+# Preloaded scripts and scenes
+const StateMachineScript = preload("res://scripts/states/_state_machine.gd")
+const StateIdleScript = preload("res://scripts/states/state_types/unit_idle.gd")
+const StateMoveScript = preload("res://scripts/states/state_types/unit_move.gd")
+const StateAutoAttackScript = preload("res://scripts/states/state_types/unit_auto_attack.gd")
+
+const HealthbarScene = preload("res://ui/player_stats/healthbar.tscn")
+
+const DEFAULT_BASE_STATS: Dictionary = {
+	"health": 640,
+	"health_regen": 35,
+	"mana": 280,
+	"mana_regen": 7,
+	"armor": 26,
+	"magic_resist": 30,
+	"attack_range": 300,
+	"attack_damage": 60,
+	"attack_speed": 75,
+	"movement_speed": 100,
+}
 
 # constant unit variables
 @export var id: int
@@ -132,31 +147,17 @@ var attack_range_visualizer: MeshInstance3D
 
 var action_effects: Node
 
-# Preloaded scripts and scenes
-const state_machine_script = preload("res://scripts/states/_state_machine.gd")
-const state_idle_script = preload("res://scripts/states/state_types/unit_idle.gd")
-const state_move_script = preload("res://scripts/states/state_types/unit_move.gd")
-const state_auto_attack_script = preload("res://scripts/states/state_types/unit_auto_attack.gd")
-
-const healthbar_scene = preload("res://ui/player_stats/healthbar.tscn")
-
-const default_base_stats: Dictionary = {
-	"health": 640,
-	"health_regen": 35,
-	"mana": 280,
-	"mana_regen": 7,
-	"armor": 26,
-	"magic_resist": 30,
-	"attack_range": 300,
-	"attack_damage": 60,
-	"attack_speed": 75,
-	"movement_speed": 100,
-}
+## Each of these effects is a function that takes the caster, the target, the damage type,
+## and the damage amount.
+## They should return the remaining damage after the effect has been applied.
+## The effects are applied in the order they are added to the array.
+## The remaining damage is then subject to the regular damage calculation.
+var _hit_reduction_effects: Array[Callable] = []
 
 
 func _init():
 	if base_stats == null:
-		base_stats = StatCollection.from_dict(default_base_stats)
+		base_stats = StatCollection.from_dict(DEFAULT_BASE_STATS)
 
 	if maximum_stats == null:
 		maximum_stats = base_stats.get_copy()
@@ -221,7 +222,7 @@ func _setup_scene_elements():
 	# setting up the state machine
 	var state_machine_node = Node.new()
 	state_machine_node.name = "StateMachine"
-	state_machine_node.set_script(state_machine_script)
+	state_machine_node.set_script(StateMachineScript)
 
 	if Config.show_all_state_changes:
 		state_machine_node.print_state_changes = true
@@ -230,17 +231,17 @@ func _setup_scene_elements():
 
 	var state_idle_node = Node.new()
 	state_idle_node.name = "Idle"
-	state_idle_node.set_script(state_idle_script)
+	state_idle_node.set_script(StateIdleScript)
 	state_machine_node.add_child(state_idle_node)
 
 	var state_move_node = Node.new()
 	state_move_node.name = "Moving"
-	state_move_node.set_script(state_move_script)
+	state_move_node.set_script(StateMoveScript)
 	state_machine_node.add_child(state_move_node)
 
 	var state_auto_attack_node = Node.new()
 	state_auto_attack_node.name = "Attacking"
-	state_auto_attack_node.set_script(state_auto_attack_script)
+	state_auto_attack_node.set_script(StateAutoAttackScript)
 	state_machine_node.add_child(state_auto_attack_node)
 
 	state_machine_node.initial_state = state_idle_node
@@ -277,7 +278,7 @@ func _setup_scene_elements():
 	projectile_spawner_node.name = "ProjectileSpawner"
 	projectile_spawner_node.spawn_limit = 999
 	projectile_spawner_node.spawn_path = NodePath("../Projectiles")
-	projectile_spawner_node.spawn_function = spawn_projectile
+	projectile_spawner_node.spawn_function = _spawn_projectile
 	add_child(projectile_spawner_node)
 	projectile_spawner = get_node("ProjectileSpawner")
 
@@ -294,7 +295,7 @@ func _setup_scene_elements():
 	nav_agent = get_node("NavigationAgent3D")
 
 	# set up the healthbar
-	var healthbar_node = healthbar_scene.instantiate()
+	var healthbar_node = HealthbarScene.instantiate()
 	healthbar_node.name = "Healthbar"
 	add_child(healthbar_node)
 	healthbar_node.update_healthbar(self)
@@ -352,29 +353,29 @@ func _setup_default_signals():
 	healed.connect(_healed_handler)
 
 
-func spawn_projectile(_args):
+func _spawn_projectile(_args):
 	if not projectile_config:
 		print("Projectile config not set.")
 		return null
 
-	var _projectile = Projectile.new()
+	var new_projectile = Projectile.new()
 
 	var spawn_offset = projectile_config["spawn_offset"] as Vector3
 	spawn_offset = spawn_offset.rotated(Vector3(0, 1, 0), rotation.y)
 
-	_projectile.caster = self
-	_projectile.position = server_position + spawn_offset
-	_projectile.target = target_entity
+	new_projectile.caster = self
+	new_projectile.position = server_position + spawn_offset
+	new_projectile.target = target_entity
 
-	_projectile.model = projectile_config["model"]
-	_projectile.model_scale = projectile_config["model_scale"]
-	_projectile.model_rotation = projectile_config["model_rotation"]
-	_projectile.speed = projectile_config["speed"]
-	_projectile.damage_type = projectile_config["damage_type"]
+	new_projectile.model = projectile_config["model"]
+	new_projectile.model_scale = projectile_config["model_scale"]
+	new_projectile.model_rotation = projectile_config["model_rotation"]
+	new_projectile.speed = projectile_config["speed"]
+	new_projectile.damage_type = projectile_config["damage_type"]
 
-	_projectile.is_crit = should_crit()
+	new_projectile.is_crit = _should_crit()
 
-	return _projectile
+	return new_projectile
 
 
 # Stats related things
@@ -400,7 +401,7 @@ func give_exp(amount: int):
 		level_up()
 
 
-func reward_exp_on_death(murderer = null):
+func _reward_exp_on_death(murderer = null):
 	var exp_reward_shape = CylinderShape3D.new()
 	# set the radius in which all units will be rewarded experience
 	exp_reward_shape.radius = 100.0
@@ -419,17 +420,17 @@ func reward_exp_on_death(murderer = null):
 
 	var bodies = exp_reward_collider.get_overlapping_bodies()
 	for body in bodies:
-		var _unit = body as Unit
-		if _unit == null:
+		var other_unit = body as Unit
+		if other_unit == null:
 			continue
-		if _unit.team == team:
+		if other_unit.team == team:
 			continue
-		if not _unit.is_alive:
+		if not other_unit.is_alive:
 			continue
-		if _unit == murderer:
+		if other_unit == murderer:
 			continue
 
-		rewarded_units.append(_unit)
+		rewarded_units.append(other_unit)
 
 	exp_reward_collider.queue_free()
 
@@ -574,13 +575,13 @@ func take_damage(caster: Unit, is_crit: bool, damage_type: DamageType, damage_am
 	# If the health is 0 or less, the unit dies and we register the caster as the murderer.
 	if current_stats.health <= 0:
 		current_stats.health = 0
-		die(caster)
+		_die(caster)
 
 	# This simply updates all UI elements with the latest stats
 	current_stats_changed.emit()
 
 
-func should_crit() -> bool:
+func _should_crit() -> bool:
 	if current_stats.attack_crit_chance <= 0:
 		return false
 	if current_stats.attack_crit_chance >= 100:
@@ -591,10 +592,10 @@ func should_crit() -> bool:
 	return rand.randi_range(0, 100) < current_stats.attack_crit_chance
 
 
-func die(murderer = null):
+func _die(murderer = null):
 	is_alive = false
 
-	reward_exp_on_death(murderer)
+	_reward_exp_on_death(murderer)
 	died.emit()
 
 	if team > 0:
@@ -655,16 +656,16 @@ func trigger_ability(_index: int):
 func apply_effect(effect: UnitEffect):
 	effect_array.append(effect)
 	add_child(effect)
-	recalculate_cc_state()
+	_recalculate_cc_state()
 
 
 func _on_cc_end(effect: UnitEffect):
 	effect_array.erase(effect)
 	effect.end()
-	recalculate_cc_state()
+	_recalculate_cc_state()
 
 
-func recalculate_cc_state() -> int:
+func _recalculate_cc_state() -> int:
 	var new_state := 0
 	for effect in effect_array:
 		new_state = new_state | effect.cc_mask
@@ -736,7 +737,7 @@ func _windup_finished_melee(caster, target):
 	if target != target_entity:
 		return
 
-	attack_connected.emit(self, target, should_crit(), DamageType.PHYSICAL)
+	attack_connected.emit(self, target, _should_crit(), DamageType.PHYSICAL)
 
 
 func _attack_connected(caster, target, is_crit, damage_type):

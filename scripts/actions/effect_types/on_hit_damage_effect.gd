@@ -1,6 +1,5 @@
-extends ActionEffect
-
 class_name OnHitDamageEffect
+extends ActionEffect
 
 var damage: int = 0
 
@@ -37,7 +36,7 @@ func _from_dict(_dict: Dictionary) -> bool:
 
 	damage_type = (
 		JsonHelper.get_optional_enum(
-			_dict, "damage_type", Unit.ParseDamageType, Unit.DamageType.PHYSICAL
+			_dict, "damage_type", Unit.PARSE_DAMAGE_TYPE, Unit.DamageType.PHYSICAL
 		)
 		as Unit.DamageType
 	)
@@ -58,7 +57,7 @@ func get_copy() -> ActionEffect:
 
 func get_description_string(_caster: Unit) -> String:
 	var effect_string = super(_caster) + "\n"
-	var damage_type_string = Unit.ParseDamageType.find_key(damage_type)
+	var damage_type_string = Unit.PARSE_DAMAGE_TYPE.find_key(damage_type)
 	var damage_type_translation = tr("DAMAGE_TYPE:" + damage_type_string + ":NAME")
 
 	if scaling_calc != null:
@@ -101,6 +100,6 @@ func _on_attack_connected_scaled(caster: Unit, target: Unit, is_crit: bool, _dam
 	if not target.is_alive:
 		return
 
-	var _damage = int(scaling_calc.call(caster, target))
+	var raw_damage = int(scaling_calc.call(caster, target))
 
-	target.take_damage(caster, can_crit and is_crit, damage_type, _damage)
+	target.take_damage(caster, can_crit and is_crit, damage_type, raw_damage)
