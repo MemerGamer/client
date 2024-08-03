@@ -6,6 +6,23 @@ on:
       - 4.3_update
 
 jobs:
+  check_style:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: install pipx
+        run: python -m pip install --upgrade pip pipx
+      - name: install gdtoolkit
+        run: pipx install gdtoolkit
+      - name: inject setuptools
+        run: pipx inject gdtoolkit setuptools
+      - name: check style
+        run: python utility_scripts/format_sources.py CHECK
+  
   compile_and_export_game:
     uses: ./.github/workflows/compile_and_export_all.yaml
     secrets: inherit
