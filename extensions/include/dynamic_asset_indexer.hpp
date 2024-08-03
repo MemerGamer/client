@@ -26,7 +26,6 @@ public:
 	static DynamicAssetIndexer* get_singleton() { 
 		if (_AssetIndexerSingleton == nullptr) {
 			_AssetIndexerSingleton = memnew(DynamicAssetIndexer);
-			_AssetIndexerSingleton->index_files();
 		}
 
 		return _AssetIndexerSingleton;

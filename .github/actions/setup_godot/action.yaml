@@ -1,0 +1,45 @@
+name: 'Setup Godot'
+description: 'Setup Godot for use in the workflow'
+
+inputs:
+  GODOT_VERSION:
+    description: 'The godot version string'
+    required: true
+    type: string
+  GODOT_REPO:
+    description: 'The repository to download godot from'
+    required: true
+    type: string
+
+outputs:
+  GODOT_EXE:
+    description: "The godot executable"
+    value: ${{ steps.get_godot_exe.outputs.godot_exe }}
+  GODOT_CONSOLE_EXE:
+    description: "The godot executable for running in console mode"
+    value: ${{ steps.get_godot_console_exe.outputs.godot_console_exe }}
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: install python deps
+      shell: bash
+      run: python -m pip install wget
+
+    - name: setup godot
+      shell: bash
+      run: python ./.github/actions/setup_godot/setup_godot.py --godot_repo "${{ inputs.GODOT_REPO }}" --godot_version "${{ inputs.GODOT_VERSION }}" download
+
+    - name: get the godot executable
+      shell: bash
+      id: get_godot_exe
+      run: python ./.github/actions/setup_godot/setup_godot.py --godot_repo "${{ inputs.GODOT_REPO }}" --godot_version "${{ inputs.GODOT_VERSION }}" print_program
+
+    - name: get the godot console executable
+      shell: bash
+      id: get_godot_console_exe
+      run: python ./.github/actions/setup_godot/setup_godot.py --godot_repo "${{ inputs.GODOT_REPO }}" --godot_version "${{ inputs.GODOT_VERSION }}" print_console        

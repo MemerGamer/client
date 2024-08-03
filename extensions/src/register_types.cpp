@@ -12,17 +12,25 @@
 using namespace godot;
 
 
-void initialize_openchamp_module(ModuleInitializationLevel p_level) {
-	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
-		return;
-	}
-
+void register_openchamp_types() {
 	ClassDB::register_class<Identifier>();
 	ClassDB::register_class<DynamicAssetIndexer>();
 	ClassDB::register_class<DataCacheManager>();
+}
 
-	Engine::get_singleton()->register_singleton("AssetIndexer", DynamicAssetIndexer::get_singleton());
-	Engine::get_singleton()->register_singleton("DataCache", DataCacheManager::get_singleton());
+void initialize_openchamp_module(ModuleInitializationLevel p_level) {
+	switch (p_level) {
+	case MODULE_INITIALIZATION_LEVEL_CORE:
+		register_openchamp_types();
+		return;
+	case MODULE_INITIALIZATION_LEVEL_SCENE:
+		Engine::get_singleton()->register_singleton("AssetIndexer", DynamicAssetIndexer::get_singleton());
+		Engine::get_singleton()->register_singleton("DataCache", DataCacheManager::get_singleton());
+
+		DynamicAssetIndexer::get_singleton()->index_files();
+		DataCacheManager::get_singleton()->index_files();
+		return;
+	}
 }
 
 
@@ -46,7 +54,7 @@ GDExtensionBool GDE_EXPORT openchamp_library_init(GDExtensionInterfaceGetProcAdd
 
 	init_obj.register_initializer(initialize_openchamp_module);
 	init_obj.register_terminator(uninitialize_openchamp_module);
-	init_obj.set_minimum_library_initialization_level(MODULE_INITIALIZATION_LEVEL_SCENE);
+	init_obj.set_minimum_library_initialization_level(MODULE_INITIALIZATION_LEVEL_CORE);
 
 	return init_obj.init();
 }

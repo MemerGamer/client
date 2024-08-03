@@ -5,37 +5,17 @@ on:
       - alpha
       - 4.3_update
 
-env:
-  GODOT_VERSION: '4.3-rc1'
-  EXPORT_TEMPLATE_VERSION: '4.3.rc1'
-  GODOT_REPO: 'godotengine/godot-builds'
-  GODOT_CACHE_KEY: 'godot_4_3_0_rc1_rev2'
-    
 jobs:
-  cache_godot:
-    uses: ./.github/workflows/cache_godot.yaml
+  compile_and_export_game:
+    uses: ./.github/workflows/compile_and_export_all.yaml
     secrets: inherit
     with:
-      GODOT_VERSION: "${{ env.GODOT_VERSION }}"
-      EXPORT_TEMPLATE_VERSION: "${{ env.EXPORT_TEMPLATE_VERSION }}"
-      GODOT_CACHE_KEY: "${{ env.GODOT_CACHE_KEY }}"
-      GODOT_REPO: "${{ env.GODOT_REPO }}"
-  
-  compile_extensions:
-    needs: cache_godot
-    uses: ./.github/workflows/compile_extension.yaml
-    secrets: inherit
-
-  export_game:
-    needs: [ cache_godot, compile_extensions ]
-    uses: ./.github/workflows/export_game.yaml
-    secrets: inherit
-    with:
-      EXPORT_TEMPLATE_VERSION: "${{ env.EXPORT_TEMPLATE_VERSION }}"
-      GODOT_CACHE_KEY: "${{ env.GODOT_CACHE_KEY }}"
+      GODOT_VERSION: '4.3-rc2'
+      GODOT_REPO: 'https://github.com/godotengine/godot-builds'
+      UPDATE_CACHES: true
 
   create_release:
-    needs: [ export_game ]
+    needs: [ compile_and_export_game ]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4

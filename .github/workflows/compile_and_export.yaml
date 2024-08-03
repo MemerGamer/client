@@ -1,0 +1,65 @@
+on:
+  workflow_call:
+    inputs:
+      GODOT_VERSION:
+        description: 'The godot version string'
+        required: true
+        type: string
+      GODOT_REPO:
+        description: 'The repository to download godot from'
+        required: true
+        type: string
+      UPDATE_CACHES:
+        description: 'upload new cache versions'
+        required: true
+        type: boolean
+      GAME_EXPORT_NAME:
+        description: 'The name of the export'
+        required: true
+        type: string
+      GAME_ARTIFACT_NAME:
+        description: 'The name of the artifact to upload'
+        required: true
+        type: string
+      EXTENSIONS_ARCHITECTURE:
+        description: 'The architecture to build the extensions for'
+        required: true
+        type: string
+      BUILD_OS:
+        description: 'The OS to build the extension on'
+        required: true
+        type: string
+      SEQUENTIAL_COMPILES:
+        description: 'Whether to compile extensions sequentially'
+        required: true
+        type: boolean
+      COMPILE_THREADS:
+        description: 'The number of threads to use for compilation'
+        required: false
+        type: number
+        default: 0
+
+jobs:
+  compile_extensions:
+    uses: ./.github/workflows/compile_extensions.yaml
+    secrets: inherit
+    with:
+      GODOT_VERSION: ${{ inputs.GODOT_VERSION }}
+      BUILD_OS: ${{ inputs.BUILD_OS }}
+      UPDATE_CACHES: ${{ inputs.UPDATE_CACHES }}
+      EXTENSIONS_ARCHITECTURE: ${{ inputs.EXTENSIONS_ARCHITECTURE }}
+      SEQUENTIAL_COMPILES: ${{ inputs.SEQUENTIAL_COMPILES }}
+      COMPILE_THREADS: ${{ inputs.COMPILE_THREADS }}
+
+  export_game:
+    needs: compile_extensions
+    uses: ./.github/workflows/export_game.yaml
+    secrets: inherit
+    with:
+      GODOT_VERSION: ${{ inputs.GODOT_VERSION }}
+      GODOT_REPO: ${{ inputs.GODOT_REPO }}
+      GAME_EXPORT_NAME: ${{ inputs.GAME_EXPORT_NAME }}
+      GAME_ARTIFACT_NAME: ${{ inputs.GAME_ARTIFACT_NAME }}
+      BUILD_OS: ${{ inputs.BUILD_OS }}
+      EXTENSIONS_ARCHITECTURE: ${{ inputs.EXTENSIONS_ARCHITECTURE }}
+      SEQUENTIAL_COMPILES: ${{ inputs.SEQUENTIAL_COMPILES }}

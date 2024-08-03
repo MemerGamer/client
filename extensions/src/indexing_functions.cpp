@@ -9,7 +9,6 @@
 #include <godot_cpp/classes/json.hpp>
 #include <godot_cpp/classes/translation.hpp>
 #include <godot_cpp/classes/translation_server.hpp>
-#include <godot_cpp/classes/os.hpp>
 
 using namespace godot;
 
@@ -104,9 +103,6 @@ static inline void _index_fonts(String pack_path, String asset_group, HashMap<St
 		}
 
 		if (font_name.ends_with(".import")){
-			if (OS::get_singleton()->has_feature("editor")){
-				continue;
-			}
 			font_name = font_name.substr(0, font_name.length() - 7);
 		}
 
@@ -207,9 +203,6 @@ static inline void _index_resources(
 			}
 			
 			if (texture_name.ends_with(".import")){
-				if (OS::get_singleton()->has_feature("editor")){
-					continue;
-				}
 				texture_name = texture_name.substr(0, texture_name.length() - 7);
 			}
 

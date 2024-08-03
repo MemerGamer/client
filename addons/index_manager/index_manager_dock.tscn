@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=2 format=3 uid="uid://c6dc1hvgja2op"]
 
 [ext_resource type="Script" path="res://addons/index_manager/index_manager_dock.gd" id="1_akxf6"]
 
@@ -16,6 +16,7 @@ size_flags_vertical = 3
 script = ExtResource("1_akxf6")
 
 [node name="VSplitContainer" type="VSplitContainer" parent="."]
+custom_minimum_size = Vector2(0, 100)
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

@@ -1,13 +1,16 @@
 cmake_minimum_required(VERSION 3.13)
 project(openchamp LANGUAGES CXX)
 
-if (GODOT_CUSTOM_API_FILE STREQUAL "")
-	set(GODOT_CUSTOM_API_FILE "${CMAKE_SOURCE_DIR}/extension_api.json")
-endif()
+set(GODOT_GDEXTENSION_DIR "${CMAKE_SOURCE_DIR}")
 
-if (GODOT_GDEXTENSION_DIR STREQUAL "")
-	set(GODOT_GDEXTENSION_DIR "${CMAKE_SOURCE_DIR}")
-endif()
+find_program(CCACHE_PROGRAM NAMES ccache sccache)
+if (CCACHE_PROGRAM)
+	set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+	set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+	message(STATUS "Ccache found: ${CCACHE_PROGRAM}")
+else ()
+	message(STATUS "Neither ccache nor sccache found")
+endif ()
 
 if (GODOT_DISABLE_EXCEPTIONS)
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
@@ -26,8 +29,8 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
 set(SOURCES
-    src/register_types.cpp
-    src/identifier.cpp
+	src/register_types.cpp
+	src/identifier.cpp
 	src/dynamic_asset_indexer.cpp
 	src/data_cache_manager.cpp
 )
@@ -37,9 +40,9 @@ add_library(openchamp SHARED ${SOURCES})
 
 
 if(WIN32)
-    if(MINGW)
+	if(MINGW)
 		target_link_libraries(openchamp -static gcc stdc++ winpthread -dynamic)
-    endif()
+	endif()
 endif()
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)

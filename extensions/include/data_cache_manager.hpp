@@ -22,7 +22,6 @@ public:
 	static DataCacheManager* get_singleton() { 
 		if (_DataCacheManagerSingleton == nullptr) {
 			_DataCacheManagerSingleton = memnew(DataCacheManager);
-			_DataCacheManagerSingleton->index_files();
 		}
 
 		return _DataCacheManagerSingleton;

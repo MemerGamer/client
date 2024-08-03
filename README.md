@@ -84,6 +84,20 @@ The user prefix is in the following location:
 To reimport the assets close godot, run `find . -name \*.import -delete` in the project dir (linux, mac, msys2, wsl) and then open godot again.
 This makes sure the assets are in the default state that will also be the one that is used for game exports.
 
+## Local testing
+
+On Linux system you can use act to run the Linux amd64 parts of the CI on your machine.
+To do that use the following commands:
+
+```bash
+# Setting up the act artifact server (one time only)
+mkdir -p $HOME/.act
+echo "--artifact-server-path $HOME/.act" >> $HOME/.actrc
+
+# Actually running the workflow
+gh extension exec act workflow_call -W '.github/workflows/compile_and_export.yaml' -e .github/act_compile_and_export.json -s GITHUB_TOKEN="$(gh auth token)"
+```
+
 ## Contributing
 
 Contributions are always welcome!

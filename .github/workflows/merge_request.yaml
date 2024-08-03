@@ -1,0 +1,14 @@
+on: 
+  pull_request:
+    types:
+      - opened
+      - reopened
+
+jobs:
+  compile_and_export_game:
+    uses: ./.github/workflows/compile_and_export_all.yaml
+    secrets: inherit
+    with:
+      GODOT_VERSION: '4.3-rc2'
+      GODOT_REPO: 'https://github.com/godotengine/godot-builds'
+      UPDATE_CACHES: false

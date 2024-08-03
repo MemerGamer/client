@@ -1,0 +1,104 @@
+on:
+  workflow_call:
+    inputs:
+      GODOT_VERSION:
+        description: 'The godot version string'
+        required: true
+        type: string
+      GODOT_REPO:
+        description: 'The repository to download godot from'
+        required: true
+        type: string
+      UPDATE_CACHES:
+        description: 'upload new cache versions'
+        required: true
+        type: boolean
+
+jobs:
+  export_game:
+    strategy:
+      fail-fast: false
+      matrix:
+        export_type:
+          - "macOS"
+          - "Windows (amd64)"
+          - "Linux (amd64)"
+          - "Linux (arm64)"
+        include:
+          - export_type: "macOS"
+            os: macos-latest
+            name: "macos"
+            arch: native
+
+          - export_type: "Windows (amd64)"
+            os: windows-latest
+            name: "windows"
+            arch: native
+
+          - export_type: "Linux (amd64)"
+            os: ubuntu-24.04
+            name: "linux_amd64"
+            arch: native
+
+          - export_type: "Linux (arm64)"
+            os: ubuntu-24.04
+            name: "linux_aarch64"
+            arch: aarch64
+
+    uses: ./.github/workflows/compile_and_export.yaml
+    secrets: inherit
+    with:
+      GODOT_VERSION: ${{ inputs.GODOT_VERSION }}
+      GODOT_REPO: ${{ inputs.GODOT_REPO }}
+      UPDATE_CACHES: ${{ inputs.UPDATE_CACHES }}
+      GAME_EXPORT_NAME: ${{ matrix.export_type }}
+      GAME_ARTIFACT_NAME: ${{ matrix.name }}
+      BUILD_OS: ${{ matrix.os }}
+      EXTENSIONS_ARCHITECTURE: ${{ matrix.arch }}
+      SEQUENTIAL_COMPILES: false
+
+
+  combine_extension_artifacts:
+    name: "Combine Extension Binaries"
+    runs-on: "ubuntu-24.04"
+    needs: export_game
+    steps:
+      - name: Retrieve extension artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: extension_*
+          path: _bin
+
+      - name: Combine extension artifacts
+        run: |
+          mkdir -p bin
+          cp _bin/*/* bin
+
+      - name: Publish extension artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: extensions
+          path: bin
+
+
+  combine_export_artifacts:
+    name: "Combine Export Binaries"
+    runs-on: "ubuntu-24.04"
+    needs: export_game
+    steps:
+      - name: Download the export artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: game_export_*
+          path: _build
+
+      - name: properly place the export artifacts
+        run: |
+          mkdir -p build
+          cp _build/*/* build
+
+      - name: Publish extension artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: game_exports
+          path: build

@@ -1,6 +1,7 @@
 # Godot 4+ specific ignores
 .godot/*
 !.godot/uid_cache.bin
+!.godot/extension_list.cfg
 
 android/
 *.tmp

@@ -1,0 +1,12 @@
+{
+    "inputs": {
+        "GODOT_VERSION": "4.3-rc2",
+        "GODOT_REPO": "https://github.com/godotengine/godot-builds",
+        "GAME_EXPORT_NAME": "Linux (amd64)",
+        "GAME_ARTIFACT_NAME": "linux_amd64",
+        "BUILD_OS": "ubuntu-latest",
+        "EXTENSIONS_ARCHITECTURE": "native",
+        "SEQUENTIAL_COMPILES": "true",
+        "COMPILE_THREADS": "8"
+    }
+}
