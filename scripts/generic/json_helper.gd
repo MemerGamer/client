@@ -1,6 +1,38 @@
 class_name JsonHelper
 
 
+static func get_color_value(
+	dict: Dictionary, key_name: String = "", fallback_value = Color.BLACK
+) -> Color:
+	var value = fallback_value
+	var raw_data = dict
+
+	if key_name != "":
+		if not dict.has(key_name):
+			return value
+
+		raw_data = dict[key_name]
+		if not raw_data:
+			return value
+
+	if raw_data is Dictionary:
+		if raw_data.has("r"):
+			value.r = float(raw_data["r"])
+
+		if raw_data.has("g"):
+			value.g = float(raw_data["g"])
+
+		if raw_data.has("b"):
+			value.b = float(raw_data["b"])
+
+		if raw_data.has("a"):
+			value.a = float(raw_data["a"])
+
+		return value
+
+	return Color(str(raw_data))
+
+
 static func get_vector3(
 	dict: Dictionary, key_name: String = "", fallback_value = Vector3(0, 0, 0)
 ) -> Vector3:

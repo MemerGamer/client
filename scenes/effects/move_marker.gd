@@ -1,10 +1,10 @@
 extends Node3D
 
+var attack_move: bool
+
 @onready var particles: GPUParticles3D = $GPUParticles3D
 @onready var mesh: MeshInstance3D = $Marker
 @onready var anim_player: AnimationPlayer = $AnimationPlayer
-
-var attack_move: bool
 
 
 func _ready():

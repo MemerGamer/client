@@ -3,11 +3,10 @@ extends Node
 var _CC_Type_Registry := CCTypesRegistry.new()
 var _Item_Registry := ItemRegistry.new()
 var _Unit_Registry := UnitRegistry.new()
+var _Structure_Theme_Registry := StructureThemeRegistry.new()
 
 var _RegistryList: Array[RegistryBase] = [
-	_CC_Type_Registry,
-	_Item_Registry,
-	_Unit_Registry,
+	_CC_Type_Registry, _Item_Registry, _Unit_Registry, _Structure_Theme_Registry
 ]
 
 
@@ -25,6 +24,10 @@ func items() -> ItemRegistry:
 
 func units() -> UnitRegistry:
 	return _Unit_Registry
+
+
+func structure_themes() -> StructureThemeRegistry:
+	return _Structure_Theme_Registry
 
 
 ## Get a list of files that are not cached yet.

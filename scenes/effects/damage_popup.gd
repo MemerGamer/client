@@ -1,9 +1,7 @@
 class_name DamagePopup
 extends Node2D
 
-@onready var label: RichTextLabel = $LabelNode/Label
-@onready var label_container: Node2D = $LabelNode
-@onready var ap: AnimationPlayer = $AnimationPlayer
+const RANDOM_OFFSET = 20
 
 var camera: Camera3D
 var damage_value: int
@@ -16,7 +14,9 @@ var damage_type_colors = {
 	Unit.DamageType.MAGICAL: Color.PURPLE,
 }
 
-const random_offset = 20
+@onready var label: RichTextLabel = $LabelNode/Label
+@onready var label_container: Node2D = $LabelNode
+@onready var ap: AnimationPlayer = $AnimationPlayer
 
 
 func _ready():
@@ -47,7 +47,7 @@ func play():
 
 	var start_pos = camera.unproject_position(spawn_position)
 	start_pos += Vector2(
-		randi_range(-random_offset, random_offset), randi_range(-random_offset, random_offset)
+		randi_range(-RANDOM_OFFSET, RANDOM_OFFSET), randi_range(-RANDOM_OFFSET, RANDOM_OFFSET)
 	)
 	var length = ap.get_animation("pop_up").length
 	var end_pos = start_pos + Vector2(0, -20)

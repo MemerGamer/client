@@ -3,7 +3,6 @@ extends Node
 signal display_property_changed
 signal camera_property_changed
 
-
 # a helper value, to pause some things while in a menu
 @export var in_focued_menu: bool = false
 @export var is_dedicated_server: bool = false
