@@ -4,11 +4,7 @@ extends Node3D
 @onready var tower_base = $Tower
 @onready var banners = $Banners
 
-enum colors {
-	BASE,
-	RED,
-	BLUE
-}
+enum colors { BASE, RED, BLUE }
 
 @export var color: colors = colors.BASE
 
@@ -46,4 +42,4 @@ func set_color(new_color: colors):
 			main_crystal.albedo_color = crystal_albedo_blue
 			main_crystal.emission = crystal_emission_blue
 			tower_base.surface_material_override[0].albedo_color = banner_albedo_blue
-			banners.surface_material_override[0].albedo_color = banner_albedo_blue 
+			banners.surface_material_override[0].albedo_color = banner_albedo_blue

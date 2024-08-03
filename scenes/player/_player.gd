@@ -14,16 +14,16 @@ var initial_mouse_position := Vector2.ZERO
 var is_middle_mouse_dragging := false
 var is_right_mouse_dragging := false
 var is_left_mouse_dragging := false
-var character : Unit
-var attack_collider : Area3D
+var character: Unit
+var attack_collider: Area3D
 
 var last_movement_gamepad = false
 
 @onready var marker = MoveMarker.instantiate()
 #@export var player := 1:
-	#set(id):
-		#player = id
-		#$MultiplayerSynchronizer.set_multiplayer_authority(id)
+#set(id):
+#player = id
+#$MultiplayerSynchronizer.set_multiplayer_authority(id)
 
 
 func _ready():
@@ -33,9 +33,9 @@ func _ready():
 	multiplayer.server_disconnected.connect(get_tree().quit)
 	spring_arm.spring_length = Config.camera_settings.max_zoom
 	Config.camera_property_changed.connect(_on_camera_setting_changed)
-	
+
 	center_camera.call_deferred(multiplayer.get_unique_id())
-	
+
 	if server_listener == null:
 		server_listener = get_parent()
 		while !server_listener.is_in_group("Map"):
@@ -57,28 +57,28 @@ func _ready():
 
 
 func _input(event):
-	if Config.is_dedicated_server: return;
+	if Config.is_dedicated_server:
+		return
 
 	if Config.in_focued_menu:
 		return
-	
+
 	if event is InputEventMouseButton:
 		last_movement_gamepad = false
-		
+
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			player_mouse_action(event, true, true)
 			is_right_mouse_dragging = false
-		
+
 		# Right click to move
 		if event.button_index == MOUSE_BUTTON_RIGHT:
 			# Start dragging
-			player_mouse_action(event, not is_right_mouse_dragging) # For single clicks
+			player_mouse_action(event, not is_right_mouse_dragging)  # For single clicks
 
 			if event.is_pressed and not is_right_mouse_dragging:
 				is_right_mouse_dragging = true
 			else:
 				is_right_mouse_dragging = false
-
 
 		# if event.button_index == MOUSE_BUTTON_MIDDLE:
 		# 	if event.pressed:
@@ -86,24 +86,23 @@ func _input(event):
 		# 		is_middle_mouse_dragging = true
 		# 	else:
 		# 		is_middle_mouse_dragging = false
-		
+
 		# Stop dragging if mouse is released
 		if not event.is_pressed:
 			is_middle_mouse_dragging = false
 			is_right_mouse_dragging = false
-		
+
 		return
-	
+
 	if event is InputEventMouseMotion:
 		if is_right_mouse_dragging:
 			player_mouse_action(event, false)
 			return
 
-	
 	if event.is_action("player_attack_closest"):
 		if not _player_action_attack_near(character.global_position, null):
 			character.change_state("Idle", null)
-		
+
 		return
 
 
@@ -112,16 +111,17 @@ func get_target_position(pid: int) -> Vector3:
 	if champ:
 		return champ.position
 	return Vector3.ZERO
-	
 
-func player_mouse_action(event, play_marker: bool=false, attack_move: bool=false):
+
+func player_mouse_action(event, play_marker: bool = false, attack_move: bool = false):
 	var from = camera.project_ray_origin(event.position)
 	var to = from + camera.project_ray_normal(event.position) * 1000
-	
+
 	var space = get_world_3d().direct_space_state
 	var params = PhysicsRayQueryParameters3D.create(from, to)
 	var result = space.intersect_ray(params)
-	if !result: return
+	if !result:
+		return
 
 	# Move
 	if result.collider.is_in_group("Ground"):
@@ -130,7 +130,7 @@ func player_mouse_action(event, play_marker: bool=false, attack_move: bool=false
 				character.change_state("Idle", null)
 		else:
 			_player_action_move(result.position, play_marker)
-	
+
 	else:
 		# Attack
 		_player_action_attack(result.collider)
@@ -140,10 +140,10 @@ func _player_action_attack(collider):
 	var colliding_unit = collider as Unit
 	if not colliding_unit:
 		return
-	
+
 	if colliding_unit.team == get_character(multiplayer.get_unique_id()).team:
 		return
-	
+
 	var target_path = str(colliding_unit.get_path())
 	server_listener.rpc_id(get_multiplayer_authority(), "target", target_path)
 
@@ -176,7 +176,7 @@ func _player_action_attack_near(center: Vector3, target_mode = null) -> bool:
 			"structures_only":
 				target_players = false
 				target_minions = false
-	
+
 	var closest_unit = null
 	var closest_distance = 1000000
 
@@ -186,19 +186,31 @@ func _player_action_attack_near(center: Vector3, target_mode = null) -> bool:
 	var bodies = attack_collider.get_overlapping_bodies()
 	for body in bodies:
 		var unit = body as Unit
-		if unit == null: continue
-		if unit == character: continue
-		if unit.team == character.team: continue
-		if not unit.is_alive: continue
+		if unit == null:
+			continue
+		if unit == character:
+			continue
+		if unit.team == character.team:
+			continue
+		if not unit.is_alive:
+			continue
 
-		if unit.player_controlled and not target_players: continue
-		if not unit.player_controlled and not target_minions: continue
-		if unit.is_structure and not target_structures: continue
+		if unit.player_controlled and not target_players:
+			continue
+		if not unit.player_controlled and not target_minions:
+			continue
+		if unit.is_structure and not target_structures:
+			continue
 
-		if unit.global_position.distance_to(character.global_position) > (character.current_stats.attack_range * 0.01): continue
+		if (
+			unit.global_position.distance_to(character.global_position)
+			> (character.current_stats.attack_range * 0.01)
+		):
+			continue
 
 		var distance = unit.global_position.distance_to(center)
-		if distance > closest_distance: continue
+		if distance > closest_distance:
+			continue
 
 		closest_unit = unit
 		closest_distance = distance
@@ -206,7 +218,7 @@ func _player_action_attack_near(center: Vector3, target_mode = null) -> bool:
 	if closest_unit == null:
 		print("No valid targets in range")
 		return false
-	
+
 	_player_action_attack(closest_unit)
 
 	return true
@@ -215,12 +227,12 @@ func _player_action_attack_near(center: Vector3, target_mode = null) -> bool:
 func _player_action_move(target_pos: Vector3, update_marker: bool = false):
 	if update_marker:
 		_play_move_marker(target_pos, false)
-	
+
 	target_pos.y += 1
 	server_listener.rpc_id(get_multiplayer_authority(), "move_to", target_pos)
 
 
-func _play_move_marker(marker_position : Vector3, attack_move: bool = false):
+func _play_move_marker(marker_position: Vector3, attack_move: bool = false):
 	marker.global_position = marker_position
 	marker.attack_move = attack_move
 	marker.play()
@@ -231,32 +243,39 @@ func center_camera(playerid):
 
 
 func _process(delta):
-	if Config.is_dedicated_server : return
+	if Config.is_dedicated_server:
+		return
 
 	# Handle the gamepad and touch movement input
 	var movement_delta = Vector2()
 
 	movement_delta = Input.get_vector(
-		"character_move_left", "character_move_right",
-		"character_move_up", "character_move_down",
+		"character_move_left",
+		"character_move_right",
+		"character_move_up",
+		"character_move_down",
 		Config.gamepad_deadzone
 	)
 
 	if not movement_delta.is_zero_approx():
 		last_movement_gamepad = true
-		var movement_delta3 = Vector3(movement_delta.x, 0, movement_delta.y) * character.current_stats.movement_speed * delta
+		var movement_delta3 = (
+			Vector3(movement_delta.x, 0, movement_delta.y)
+			* character.current_stats.movement_speed
+			* delta
+		)
 		var target_position = movement_delta3 + character.global_position
 		_player_action_move(target_position)
 	else:
 		if last_movement_gamepad and character.get_current_state_name() == "Moving":
 			_player_action_move(character.global_position)
-	
+
 	# handle all the camera-related input
 	camera_movement_handler()
-	
+
 	# check input for ability uses
 	detect_ability_use()
-	
+
 	# update the camera position using lerp
 	position = position.lerp(camera_target_position, delta * Config.camera_settings.cam_speed)
 
@@ -289,36 +308,36 @@ func camera_movement_handler() -> void:
 	if Input.is_action_just_pressed("player_zoomout"):
 		if spring_arm.spring_length < Config.camera_settings.max_zoom:
 			spring_arm.spring_length += 1
-	
+
 	# Recenter - Tap
 	if Input.is_action_pressed("player_camera_recenter"):
 		camera_target_position = get_target_position(multiplayer.get_unique_id())
-		
+
 	# Recenter - Toggle
 	if Input.is_action_just_pressed("player_camera_recenter_toggle"):
 		Config.camera_settings.is_cam_centered = (!Config.camera_settings.is_cam_centered)
-	
+
 	# If centered, blindly follow the character
-	if (Config.camera_settings.is_cam_centered):
+	if Config.camera_settings.is_cam_centered:
 		camera_target_position = get_target_position(multiplayer.get_unique_id())
 		return
-	
+
 	#ignore the input if this window is not even focused
 	if not get_window().has_focus():
 		return
-	
+
 	# Get Mouse Coords on screen
 	var current_mouse_position = get_viewport().get_mouse_position()
 	var size = get_viewport().get_visible_rect().size
 	var cam_delta = Vector2(0, 0)
 	var edge_margin = Config.camera_settings.edge_margin
-	
+
 	# Check if there is a collision at the mouse position
 	if not get_viewport().get_visible_rect().has_point(
 		get_viewport().get_final_transform() * current_mouse_position
 	):
 		return
-		
+
 	# Edge Panning
 	if current_mouse_position.x <= edge_margin:
 		cam_delta.x -= 1
@@ -329,15 +348,17 @@ func camera_movement_handler() -> void:
 		cam_delta.y -= 1
 	elif current_mouse_position.y >= size.y - edge_margin:
 		cam_delta.y += 1
-	
+
 	# Keyboard input
 	cam_delta = Input.get_vector("camera_left", "camera_right", "camera_up", "camera_down")
-	
+
 	# Middle mouse dragging
 	if is_middle_mouse_dragging:
 		var mouse_delta = current_mouse_position - initial_mouse_position
-		cam_delta += Vector2(mouse_delta.x, mouse_delta.y) * Config.camera_settings.cam_pan_sensitivity
-	
+		cam_delta += (
+			Vector2(mouse_delta.x, mouse_delta.y) * Config.camera_settings.cam_pan_sensitivity
+		)
+
 	# Apply camera movement
 	if not cam_delta.is_zero_approx():
 		camera_target_position += Vector3(cam_delta.x, 0, cam_delta.y)
@@ -373,7 +394,12 @@ func try_purchasing_item(item_name: String) -> void:
 	var total_cost = purchase_result["cost"]
 	if total_cost > character.current_gold:
 		var display_strings = item.get_desctiption_strings(character)
-		print(tr("ITEM:NOT_ENOUGH_GOLD") % [(total_cost - character.current_gold), display_strings["name"]])
+		print(
+			(
+				tr("ITEM:NOT_ENOUGH_GOLD")
+				% [total_cost - character.current_gold, display_strings["name"]]
+			)
+		)
 		return
 
 	var new_inventory = purchase_result["owned_items"] as Array[Item]
@@ -394,7 +420,6 @@ func try_purchasing_item(item_name: String) -> void:
 		var display_strings = item.get_desctiption_strings(character)
 		print(tr("ITEM:NOT_ENOUGH_SLOTS") % display_strings["name"])
 		return
-	
 
 	# If it is possible to actually purchase the item, request it from the server
 	server_listener.rpc_id(get_multiplayer_authority(), "try_purchase_item", item_name)
@@ -402,7 +427,5 @@ func try_purchasing_item(item_name: String) -> void:
 
 func _on_camera_setting_changed():
 	spring_arm.spring_length = clamp(
-		spring_arm.spring_length,
-		Config.camera_settings.min_zoom,
-		Config.camera_settings.max_zoom
+		spring_arm.spring_length, Config.camera_settings.min_zoom, Config.camera_settings.max_zoom
 	)

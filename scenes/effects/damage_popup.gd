@@ -23,7 +23,7 @@ func _ready():
 	if Config.is_dedicated_server:
 		queue_free()
 		return
-	
+
 	call_deferred("play")
 
 
@@ -39,7 +39,7 @@ func play():
 		print("No spawn position set for damage popup")
 		remove()
 		return
-	
+
 	if not damage_value:
 		print("No damage value set for damage popup")
 		remove()
@@ -47,8 +47,7 @@ func play():
 
 	var start_pos = camera.unproject_position(spawn_position)
 	start_pos += Vector2(
-		randi_range(-random_offset, random_offset),
-		randi_range(-random_offset, random_offset)
+		randi_range(-random_offset, random_offset), randi_range(-random_offset, random_offset)
 	)
 	var length = ap.get_animation("pop_up").length
 	var end_pos = start_pos + Vector2(0, -20)
@@ -62,15 +61,15 @@ func play():
 
 	label.push_outline_color(Color.BLACK)
 	label.push_outline_size(4)
-	
+
 	label.append_text("[center]" + str(damage_value) + "[/center]")
 	label.pop_context()
 
 	ap.play("pop_up")
-	
+
 	tween.tween_property(label_container, "position", end_pos, length).from(start_pos)
 
 
 func remove() -> void:
 	ap.stop()
-	queue_free() 
+	queue_free()
