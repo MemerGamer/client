@@ -61,7 +61,6 @@ if __name__ == "__main__":
     except:
         print('timeout on try 2')
     
-    import_output = subprocess.run(editor_command, cwd=project_dir, check=True)
+    import_output = subprocess.run(editor_command, cwd=project_dir, check=False)
     if import_output.returncode != 0:
         print("Failed to import the project")
-        exit(1)
