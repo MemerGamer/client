@@ -10,8 +10,8 @@ macos.release = "res://bin/libopenchamp.darwin.template_release.arm64.dylib"
 
 windows.debug.x86_32 = "res://bin/libopenchamp.windows.template_debug.x86_32.dll"
 windows.release.x86_32 = "res://bin/libopenchamp.windows.template_release.x86_32.dll"
-windows.debug.x86_64 = "res://bin/libopenchamp.windows.template_debug.x86_64.dll"
-windows.release.x86_64 = "res://bin/libopenchamp.windows.template_release.x86_64.dll"
+windows.debug.x86_64 = "res://bin/libopenchamp.windows.template_debug.amd64.dll"
+windows.release.x86_64 = "res://bin/libopenchamp.windows.template_release.amd64.dll"
 
 linux.debug.x86_64 = "res://bin/libopenchamp.linux.template_debug.x86_64.so"
 linux.release.x86_64 = "res://bin/libopenchamp.linux.template_release.x86_64.so"
