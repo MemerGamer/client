@@ -44,6 +44,7 @@ public:
 	void index_files();
 	void re_index_files();
 	String get_asset_path(Identifier* asset_id);
+	TypedArray<String> get_resource_path(String raw_resource_path);
 
 	void dump_asset_map();
 	Variant get_asset_map();

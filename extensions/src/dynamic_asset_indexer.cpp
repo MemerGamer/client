@@ -14,6 +14,7 @@ void DynamicAssetIndexer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("index_files"), &DynamicAssetIndexer::index_files);
 	ClassDB::bind_method(D_METHOD("re_index_files"), &DynamicAssetIndexer::re_index_files);
 	ClassDB::bind_method(D_METHOD("get_asset_path"), &DynamicAssetIndexer::get_asset_path);
+	ClassDB::bind_method(D_METHOD("get_resource_path"), &DynamicAssetIndexer::get_resource_path);
 	ClassDB::bind_method(D_METHOD("dump_asset_map"), &DynamicAssetIndexer::dump_asset_map);
 	ClassDB::bind_method(D_METHOD("get_asset_map"), &DynamicAssetIndexer::get_asset_map);
 }
@@ -82,6 +83,27 @@ String DynamicAssetIndexer::get_asset_path(Identifier* asset_id){
 	}
 	
 	return asset_map[asset_id_string];
+}
+
+TypedArray<String> DynamicAssetIndexer::get_resource_path(String raw_resource_path){
+	TypedArray<String> result = {};
+
+	auto resource_id = Identifier::for_resource(raw_resource_path);
+	if (!resource_id->is_valid()){
+		UtilityFunctions::print("Got invalid Identidier: '" + raw_resource_path + "'");
+		return result;
+	}
+
+	auto fixed_path = get_asset_path(resource_id);
+	if (fixed_path == ""){
+		UtilityFunctions::print("Asset not found in AssetIndexer: '" + raw_resource_path + "'");
+		return result;
+	}
+
+	result.append(fixed_path);
+	result.append(resource_id->get_content_type());
+
+	return result;
 }
 
 void DynamicAssetIndexer::dump_asset_map() {

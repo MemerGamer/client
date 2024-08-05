@@ -32,6 +32,7 @@ set(SOURCES
 	src/register_types.cpp
 	src/identifier.cpp
 	src/dynamic_asset_indexer.cpp
+	src/dynmaic_prefix_handler.cpp
 	src/data_cache_manager.cpp
 )
 include_directories(include)

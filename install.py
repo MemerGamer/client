@@ -31,7 +31,7 @@ def main(args):
         # if the extension can be compiled and the download wasn't successful, try to compile it
         if not download_success:
             print("Compiling extension")
-            subprocess.run([sys.executable, "extensions/scripts/compile.py"])
+            subprocess.run([sys.executable, "utility_scripts/compile.py"])
 
 
 def download_and_install_extension() -> bool:

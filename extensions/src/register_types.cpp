@@ -2,12 +2,14 @@
 
 #include "identifier.hpp"
 #include "dynamic_asset_indexer.hpp"
+#include "dynmaic_prefix_handler.hpp"
 #include "data_cache_manager.hpp"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 #include <godot_cpp/classes/engine.hpp>
+#include "godot_cpp/classes/resource_loader.hpp"
 
 using namespace godot;
 
@@ -16,6 +18,7 @@ void register_openchamp_types() {
 	ClassDB::register_class<Identifier>();
 	ClassDB::register_class<DynamicAssetIndexer>();
 	ClassDB::register_class<DataCacheManager>();
+	ClassDB::register_class<DynmaicPrefixHandler>(true);
 }
 
 void initialize_openchamp_module(ModuleInitializationLevel p_level) {
@@ -29,6 +32,9 @@ void initialize_openchamp_module(ModuleInitializationLevel p_level) {
 
 		DynamicAssetIndexer::get_singleton()->index_files();
 		DataCacheManager::get_singleton()->index_files();
+
+		Ref<DynmaicPrefixHandler> loader = memnew(DynmaicPrefixHandler);
+		ResourceLoader::get_singleton()->add_resource_format_loader(loader, true);
 		return;
 	}
 }
