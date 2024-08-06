@@ -18,7 +18,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--godot_path",
+        "--godot_path", "-gp",
         type=str,
         default="",
         help="The path to the godot editor console execuatable",
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--export_type",
+        "--export_type", "-et",
         type=str,
         default="client",
         choices=["client", "server"],
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--export_platform",
+        "--export_platform", "-ep",
         type=str,
         default="native",
         choices=[
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--release_type",
+        "--release_type", "-rt",
         type=str,
         default="release",
         choices=["release", "debug"],
