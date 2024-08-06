@@ -6,31 +6,30 @@
 
 namespace godot {
 
-class GDE_EXPORT DataCacheManager : public Object {
-	GDCLASS(DataCacheManager, Object)
+class GDE_EXPORT DataCacheManager : public RefCounted {
+	GDCLASS(DataCacheManager, RefCounted)
 
 private:
     HashMap<String, String> hashed_data_map;
 	bool files_indexed = false;
 
-	static DataCacheManager* _DataCacheManagerSingleton;
+	static Ref<DataCacheManager> _DataCacheManagerSingleton;
 
 protected:
 	static void _bind_methods();
 
 public:
-	static DataCacheManager* get_singleton() { 
-		if (_DataCacheManagerSingleton == nullptr) {
-			_DataCacheManagerSingleton = memnew(DataCacheManager);
+	static Ref<DataCacheManager> get_singleton() { 
+		if (_DataCacheManagerSingleton.is_null()) {
+			_DataCacheManagerSingleton.instantiate();
 		}
 
 		return _DataCacheManagerSingleton;
 	}
 
 	static void destory_singleton() {
-		if (_DataCacheManagerSingleton != nullptr) {
-			memdelete(_DataCacheManagerSingleton);
-			_DataCacheManagerSingleton = nullptr;
+		if (_DataCacheManagerSingleton.is_valid()) {
+			_DataCacheManagerSingleton.unref();
 		}
 	}
 

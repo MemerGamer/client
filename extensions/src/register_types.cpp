@@ -27,14 +27,13 @@ void initialize_openchamp_module(ModuleInitializationLevel p_level) {
 		register_openchamp_types();
 		return;
 	case MODULE_INITIALIZATION_LEVEL_SCENE:
-		Engine::get_singleton()->register_singleton("AssetIndexer", DynamicAssetIndexer::get_singleton());
-		Engine::get_singleton()->register_singleton("DataCache", DataCacheManager::get_singleton());
+		Engine::get_singleton()->register_singleton("AssetIndexer", DynamicAssetIndexer::get_singleton().ptr());
+		Engine::get_singleton()->register_singleton("DataCache", DataCacheManager::get_singleton().ptr());
 
 		DynamicAssetIndexer::get_singleton()->index_files();
 		DataCacheManager::get_singleton()->index_files();
 
-		Ref<DynmaicPrefixHandler> loader = memnew(DynmaicPrefixHandler);
-		ResourceLoader::get_singleton()->add_resource_format_loader(loader, true);
+		ResourceLoader::get_singleton()->add_resource_format_loader(DynmaicPrefixHandler::get_singleton(), true);
 		return;
 	}
 }
@@ -50,6 +49,9 @@ void uninitialize_openchamp_module(ModuleInitializationLevel p_level) {
 
 	Engine::get_singleton()->unregister_singleton("DataCache");
 	DataCacheManager::destory_singleton();
+
+	ResourceLoader::get_singleton()->remove_resource_format_loader(DynmaicPrefixHandler::get_singleton());
+	DynmaicPrefixHandler::destory_singleton();
 }
 
 

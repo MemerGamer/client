@@ -16,5 +16,6 @@ func _exit_tree():
 	# Clean-up of the plugin goes here.
 	# Remove the dock.
 	remove_control_from_bottom_panel(dock)
+	
 	# Erase the control from the memory.
-	dock.free()
+	dock.queue_free()

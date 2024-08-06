@@ -55,7 +55,7 @@ String Identifier::get_content_prefix() const{
 	return get_resource_prefix_from_type(type);
 }
 
-Identifier* Identifier::get_content_identifier() const{
+Ref<Identifier> Identifier::get_content_identifier() const{
 	String corrected_name = get_name().replace(get_content_type() + "/", "");
 	return Identifier::from_values(get_group(), corrected_name);
 }
@@ -137,7 +137,7 @@ TypedArray<String> Identifier::get_all_content_types(){
 }
 
 
-Identifier* Identifier::from_string(String _id_string) {
+Ref<Identifier> Identifier::from_string(String _id_string) {
 	String group = "openchamp";
 	String name = _id_string;
 
@@ -150,12 +150,12 @@ Identifier* Identifier::from_string(String _id_string) {
 	return Identifier::from_values(group, name);
 }
 
-Identifier* Identifier::from_values(String _group, String _name) {
+Ref<Identifier> Identifier::from_values(String _group, String _name) {
 	if (_group == ""){
 		_group = "openchamp";
 	}
 	
-	Identifier* id = memnew(Identifier);
+	Ref<Identifier> id {memnew(Identifier)};
 	id->group = _group;
 	id->name = _name;
 
@@ -168,7 +168,7 @@ Identifier* Identifier::from_values(String _group, String _name) {
 	return id;
 }
 
-Identifier* Identifier::for_resource(String _resource_path) {
+Ref<Identifier> Identifier::for_resource(String _resource_path) {
 	String content_type = get_content_type_from_resouce(_resource_path);
 	if (content_type == ""){
 		UtilityFunctions::print("Failed to get content type from resource: " + _resource_path);
@@ -176,7 +176,7 @@ Identifier* Identifier::for_resource(String _resource_path) {
 	}
 	String prefix = get_resource_prefix_from_type(content_type);
 
-	Identifier* id = Identifier::from_string(_resource_path.replace(prefix, ""));
+	Ref<Identifier> id = Identifier::from_string(_resource_path.replace(prefix, ""));
 	if (id == nullptr){
 		return nullptr;
 	}

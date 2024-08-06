@@ -52,6 +52,7 @@ static func _get_position(node_name: String, parent: Node, fallback_data: Dictio
 	if feature_node != null:
 		var initial_pos := Vector3(feature_node.position)
 		parent.remove_child(feature_node)
+		feature_node.queue_free()
 		return initial_pos
 
 	if fallback_data == null:

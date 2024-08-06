@@ -8,8 +8,8 @@
 
 namespace godot {
 
-class GDE_EXPORT DynamicAssetIndexer : public Object {
-	GDCLASS(DynamicAssetIndexer, Object)
+class GDE_EXPORT DynamicAssetIndexer : public RefCounted {
+	GDCLASS(DynamicAssetIndexer, RefCounted)
 
 private:
     HashMap<String, String> asset_map;
@@ -17,24 +17,23 @@ private:
 	
 	Ref<godot::Mutex> index_mutex = nullptr;
 
-	static DynamicAssetIndexer* _AssetIndexerSingleton;
+	static Ref<DynamicAssetIndexer> _AssetIndexerSingleton;
 
 protected:
 	static void _bind_methods();
 
 public:
-	static DynamicAssetIndexer* get_singleton() { 
-		if (_AssetIndexerSingleton == nullptr) {
-			_AssetIndexerSingleton = memnew(DynamicAssetIndexer);
+	static Ref<DynamicAssetIndexer> get_singleton() { 
+		if (_AssetIndexerSingleton.is_null()) {
+			_AssetIndexerSingleton.instantiate();
 		}
 
 		return _AssetIndexerSingleton;
 	}
 
 	static void destory_singleton() {
-		if (_AssetIndexerSingleton != nullptr) {
-			memdelete(_AssetIndexerSingleton);
-			_AssetIndexerSingleton = nullptr;
+		if (_AssetIndexerSingleton.is_valid()) {
+			_AssetIndexerSingleton.unref();
 		}
 	}
 
@@ -43,7 +42,7 @@ public:
 	
 	void index_files();
 	void re_index_files();
-	String get_asset_path(Identifier* asset_id);
+	String get_asset_path(Ref<Identifier> asset_id);
 	TypedArray<String> get_resource_path(String raw_resource_path);
 
 	void dump_asset_map();

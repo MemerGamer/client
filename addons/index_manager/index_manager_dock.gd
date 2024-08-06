@@ -17,6 +17,7 @@ func _rebuild_asset_list():
 	
 	for child in asset_tab_container.get_children():
 		asset_tab_container.remove_child(child)
+		child.queue_free()
 
 	AssetIndexer.re_index_files()
 
@@ -31,8 +32,6 @@ func _build_asset_list():
 	
 	# create the containers for all the categories
 	var category_continers = {}
-	
-	var asset_tab_all := VBoxContainer.new()
 	
 	for asset_type in asset_types:
 		var asset_tab_typed := VBoxContainer.new()

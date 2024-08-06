@@ -4,8 +4,8 @@
 
 namespace godot {
 
-class GDE_EXPORT Identifier : public Object {
-	GDCLASS(Identifier, Object)
+class GDE_EXPORT Identifier : public RefCounted {
+	GDCLASS(Identifier, RefCounted)
 
 private:
 	String group;
@@ -20,9 +20,9 @@ public:
 	Identifier();
 	~Identifier();
 
-	static Identifier* from_string(String _id_string);
-	static Identifier* from_values(String _group, String _name);
-	static Identifier* for_resource(String _resource_path);
+	static Ref<Identifier> from_string(String _id_string);
+	static Ref<Identifier> from_values(String _group, String _name);
+	static Ref<Identifier> for_resource(String _resource_path);
 
 	static String get_content_type_from_resouce(String _name);
 	static String get_resource_prefix_from_type(String _name);
@@ -33,7 +33,7 @@ public:
 	String get_content_type() const;
 	String get_content_prefix() const;
 
-	Identifier* get_content_identifier() const;
+	Ref<Identifier> get_content_identifier() const;
 
 	String get_group() const;
 	String get_name() const;

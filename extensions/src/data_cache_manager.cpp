@@ -39,7 +39,7 @@ void DataCacheManager::_bind_methods() {
 }
 
 
-DataCacheManager* DataCacheManager::_DataCacheManagerSingleton = nullptr;
+Ref<DataCacheManager> DataCacheManager::_DataCacheManagerSingleton{};
 
 DataCacheManager::DataCacheManager() {}
 

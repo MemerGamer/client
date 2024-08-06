@@ -19,7 +19,7 @@ void DynamicAssetIndexer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_asset_map"), &DynamicAssetIndexer::get_asset_map);
 }
 
-DynamicAssetIndexer* DynamicAssetIndexer::_AssetIndexerSingleton = nullptr;
+Ref<DynamicAssetIndexer> DynamicAssetIndexer::_AssetIndexerSingleton{};
 
 DynamicAssetIndexer::DynamicAssetIndexer():index_mutex{memnew(godot::Mutex)} {}
 
@@ -72,7 +72,7 @@ void DynamicAssetIndexer::re_index_files(){
 	index_files();
 }
 
-String DynamicAssetIndexer::get_asset_path(Identifier* asset_id){
+String DynamicAssetIndexer::get_asset_path(Ref<Identifier> asset_id){
 	index_files();
 
 	String asset_id_string = asset_id->to_string();	

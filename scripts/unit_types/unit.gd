@@ -484,6 +484,7 @@ func purchase_item(_item: Item, gold_cost: int, new_inventory: Array[Item]):
 		for effect in item_effects:
 			effect.disconnect_from_unit(self)
 			action_effects.remove_child(effect)
+			effect.queue_free()
 
 	# set the inventory to the new one and connect all effects
 	item_list = new_inventory

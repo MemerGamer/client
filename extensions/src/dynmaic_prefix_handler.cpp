@@ -21,6 +21,7 @@ void DynmaicPrefixHandler::_bind_methods() {
 
 DynmaicPrefixHandler::DynmaicPrefixHandler() {}
 
+Ref<DynmaicPrefixHandler> DynmaicPrefixHandler::_DynmaicPrefixHandlerSingleton{};
 
 bool DynmaicPrefixHandler::_recognize_path(const String &p_path, const StringName &p_type) const {
 	static TypedArray<String> supported_prefixes = Identifier::get_all_content_types();
@@ -51,7 +52,7 @@ Variant DynmaicPrefixHandler::_load(const String &p_path, const String &p_origin
     if (ResourceLoader::get_singleton()->exists(fixed_path)){
 		UtilityFunctions::print("loading '"+ fixed_path + "' from the ResourceLoader.");
 		auto load_result = ResourceLoader::get_singleton()->load(fixed_path);
-		if (load_result != nullptr){
+		if (load_result != nullptr && load_result.is_valid()){
 			return load_result;
         }else{
 			UtilityFunctions::print("Failed to load resource from ResourceLoader: '" + fixed_path + "'");
@@ -77,13 +78,13 @@ Variant DynmaicPrefixHandler::_load(const String &p_path, const String &p_origin
 
 Variant DynmaicPrefixHandler::load_texture_from_path(String fixed_path) const{
 	auto loaded_image = Image::load_from_file(fixed_path);
-	if (loaded_image == nullptr){
+	if (loaded_image.is_null()){
 		UtilityFunctions::print("Error loading image from file.");
 		return FAILED;
     }
 	
 	auto loaded_texture = ImageTexture::create_from_image(loaded_image);
-	if (loaded_texture == nullptr){
+	if (loaded_texture.is_null()){
 		UtilityFunctions::print("error loading dynamic texture: '" + fixed_path + "'");
 		return FAILED;
     }
@@ -93,7 +94,9 @@ Variant DynmaicPrefixHandler::load_texture_from_path(String fixed_path) const{
 
 
 Variant DynmaicPrefixHandler::load_font_from_path(String fixed_path) const{
-	Ref<FontFile> loaded_font = memnew(FontFile);
+	Ref<FontFile> loaded_font{};
+	loaded_font.instantiate();
+
 	auto err = loaded_font->load_dynamic_font(fixed_path);
 
 	if (err != OK){
@@ -107,12 +110,14 @@ Variant DynmaicPrefixHandler::load_font_from_path(String fixed_path) const{
 
 Variant DynmaicPrefixHandler::load_json_from_path(String fixed_path) const{
 	auto file = FileAccess::open(fixed_path, FileAccess::ModeFlags::READ);
-	if (file == nullptr){
+	if (file == nullptr || file.is_null()){
 		UtilityFunctions::print("error dynamic json not in file loader: '" + fixed_path + "'");
 		return FAILED;
     }
 
-	Ref<JSON> json_data = memnew(JSON);
+	Ref<JSON> json_data{};
+	json_data.instantiate();
+
 	auto error = json_data->parse(file->get_as_text());
 	file->close();
 

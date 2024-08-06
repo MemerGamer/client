@@ -110,7 +110,7 @@ static inline void _index_fonts(String pack_path, String asset_group, HashMap<St
 		String font_path = pack_path + "/" + asset_group + "/fonts/" + font_name;
 		String font_basename = font_name.get_basename();
 		
-		Identifier* font_id = Identifier::from_values(asset_group, "fonts/" + font_basename);
+		Ref<Identifier> font_id = Identifier::from_values(asset_group, "fonts/" + font_basename);
 
 		asset_map[font_id->to_string()] = font_path;
 		UtilityFunctions::print("Indexed font: " + font_id->to_string());
@@ -137,7 +137,7 @@ static inline void _cache_patch_data(String pack_path, String asset_group, HashM
 		UtilityFunctions::print("Caching patch data for gamemode: " + gamemode_name);
 
 		String manifest_path = pack_path + "/" + asset_group + "/patchdata/" + gamemode_name + "/manifest.json";
-		Identifier* manifest_id = Identifier::for_resource("gamemode://" + asset_group + ":" + gamemode_name);
+		Ref<Identifier> manifest_id = Identifier::for_resource("gamemode://" + asset_group + ":" + gamemode_name);
 		if (manifest_id == nullptr){
 			UtilityFunctions::print("Failed to create manifest identifier");
 			continue;
@@ -210,7 +210,7 @@ static inline void _index_resources(
 			String texture_path = pack_path + "/" + asset_group + "/" + resource_subdir + "/" + texture_name;
 			String texture_basename = texture_name.get_basename();
 			
-			Identifier* texture_id = Identifier::from_values(asset_group, resource_subdir + "/" + texture_basename);
+			Ref<Identifier> texture_id = Identifier::from_values(asset_group, resource_subdir + "/" + texture_basename);
 
 			asset_map[texture_id->to_string()] = texture_path;
 			UtilityFunctions::print("Indexed " + resource_type + ": " + texture_id->to_string());
