@@ -3,14 +3,15 @@ project(openchamp LANGUAGES CXX)
 
 set(GODOT_GDEXTENSION_DIR "${CMAKE_SOURCE_DIR}")
 
-find_program(CCACHE_PROGRAM NAMES ccache sccache)
-if (CCACHE_PROGRAM)
-	set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
-	set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
-	message(STATUS "Ccache found: ${CCACHE_PROGRAM}")
+# if we are building on linux or mac use the compiler_launcher.sh script
+if (UNIX)
+	set(CMAKE_C_COMPILER_LAUNCHER "${CMAKE_SOURCE_DIR}/compiler_launcher.sh")
+	set(CMAKE_CXX_COMPILER_LAUNCHER "${CMAKE_SOURCE_DIR}/compiler_launcher.sh")
 else ()
-	message(STATUS "Neither ccache nor sccache found")
+	set(CMAKE_C_COMPILER_LAUNCHER "${CMAKE_SOURCE_DIR}/compiler_launcher.bat")
+	set(CMAKE_CXX_COMPILER_LAUNCHER "${CMAKE_SOURCE_DIR}/compiler_launcher.bat")
 endif ()
+
 
 if (GODOT_DISABLE_EXCEPTIONS)
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")

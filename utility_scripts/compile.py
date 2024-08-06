@@ -15,16 +15,16 @@ docker_image_map = {
 }
 
 
-def setup_docker_image(target_arch: str, project_dir: str) -> str:
+def setup_docker_image(target_arch: str, project_dir: str, build_dir: str) -> List[str]:
     extensions_dir = os.path.join(project_dir, "extensions")
-    docker_image_name = "dockcross/linux-{}".format(docker_image_map[target_arch])
+    docker_image_name = "dockcross/linux-{}:latest".format(docker_image_map[target_arch])
 
     os.makedirs(os.path.join(extensions_dir, "cross_compile_stuff"), exist_ok=True)
     compiler_script = os.path.join(extensions_dir, "cross_compile_stuff", "{}.sh".format(target_arch))
 
     # run the docker image and capture the output
     docker_result = subprocess.run(
-        ["docker", "run", docker_image_name],
+        ["docker", "run", "--pull", "always", docker_image_name],
         cwd=project_dir,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -35,7 +35,10 @@ def setup_docker_image(target_arch: str, project_dir: str) -> str:
 
     os.chmod(compiler_script, os.stat(compiler_script).st_mode | stat.S_IXUSR)
 
-    return compiler_script
+    # create the compile command
+    compiler_script = os.path.abspath(compiler_script)
+
+    return [compiler_script, "cmake"]
 
 
 if __name__ == "__main__":
@@ -114,25 +117,10 @@ if __name__ == "__main__":
     cmake_command: List[str] = []
 
     linker = args["set_linker"]
-    if linker == "":
-        if shutil.which("mold"):
-            linker = "MOLD"
 
     native_build = args["target_arch"] == "native"
     if native_build:
         args["target_arch"] = host_arch
-
-    if host_arch == args["target_arch"]:
-        print("Building natively for the host architecture ({})".format(host_arch))
-
-        cmake_command = ["cmake"]
-    else:
-        print("Building with docker for the target architecture: {}".format(args["target_arch"]))
-        
-        compiler_script = setup_docker_image(args["target_arch"], project_dir)
-        compiler_script = os.path.abspath(compiler_script)
-
-        cmake_command = [compiler_script, "cmake"]
 
     # Set the build directory
     build_dir = os.path.join("extensions", "build_{}_{}".format(args["target_arch"], args["build_mode"]))
@@ -147,16 +135,23 @@ if __name__ == "__main__":
 
     os.makedirs(build_dir, exist_ok=True)
 
+    if host_arch == args["target_arch"]:
+        print("Building natively for the host architecture ({})".format(host_arch))
+
+        cmake_command = ["cmake"]
+
+        if linker == "":
+            if shutil.which("mold"):
+                linker = "MOLD"
+    else:
+        print("Building with docker for the target architecture: {}".format(args["target_arch"]))
+        
+        cmake_command = setup_docker_image(args["target_arch"], project_dir, build_dir)
+
     # prepare the environment
     if linker:
         print("Using linker: {}".format(linker))
         os.environ["CMAKE_LINKER_TYPE"] = linker
-
-    # set the ccache dir to a subdir of build_dir
-    ccache_cache_dir = os.path.join(build_dir, ".ccache")
-    os.makedirs(ccache_cache_dir, exist_ok=True)
-    os.environ["CCACHE_DIR"] = ccache_cache_dir
-    os.environ["CCACHE_SLOPPINESS"] = "locale,time_macros,include_file_ctime,include_file_mtime"
 
     # Run the setup command
     if not args['skip_setup']:
