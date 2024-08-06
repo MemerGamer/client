@@ -16,6 +16,8 @@ const PARSE_AGGRO_TYPE = {
 	"aggressive": AggroType.AGGRESSIVE,
 }
 
+const UnitScript = preload("res://scripts/unit_types/unit.gd")
+
 var stats = StatCollection.new()
 var stat_growth = StatCollection.new()
 var windup_fraction: float = 0.1
@@ -246,6 +248,8 @@ func spawn(spawn_args: Dictionary):
 	if new_unit == null:
 		print("Character (%s): Failed to instantiate model." % id.to_string())
 		return null
+
+	new_unit.set_script(UnitScript)
 
 	new_unit.name = spawn_args["name"]
 	new_unit.team = spawn_args["team"]

@@ -22,14 +22,28 @@ In order to run the game you either need to download the latest compiled version
             
 When you pull, use `git submodule update --init` if you've already got a local copy, or `git pull --recursive` on a fresh pull to pull the assets from our [default assets](https://github.com/openchamp/default_assets) repository
 
-### Downloading the extension
+### Quick automatic setup
+
+To quickly and automatically set up the project with all submodules and the latest extension version you can use the install script.
+You can do a full setup with the following commands:
+
+```bash
+git clone https://github.com/OpenChamp/client
+cd client
+python ./install.py
+```
+
+The install script will init and pull all submodules.
+After that it will try to download the extension or compile it if the download fails.
+
+### Manually downloading the extension
 
 The `extensions.zip` is distributed as part of the releases.
 I case the CI fails, you can also download it from the CI artifacts directly.
 
 Simply extract the archive file to the `bin` directory and you are good to go.
 
-### Compiling the extension
+### Manually compiling the extension
 
 The following tools are required to compile the extension:
 
@@ -37,6 +51,8 @@ The following tools are required to compile the extension:
 * [ninja-build](https://ninja-build.org/)
 * python (This is a dependency of ninja so you should already have it.)
 * A C++ compiler (g++/cmake/msvc anything *should* work)
+* Recommended: ccache or sccache to speed up builds
+* Recommended: mold as a better linker (required on android native termux builds)
 
 If you want to compile the code for a different CPU architecture you will also need docker.
 
@@ -46,7 +62,7 @@ You can use `git submodule update --init --recursive` to set them up.
 To compile the code you can simply run the following command in the root of the project:
 
 ```bash
-python ./extensions/scripts/compile.py
+python ./utility_scripts/compile.py
 ```
 
 This works on every operating system and also installs the built file to the bin dir.
