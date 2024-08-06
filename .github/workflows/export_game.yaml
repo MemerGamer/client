@@ -53,6 +53,11 @@ jobs:
       - name: Generate default_asset manifest files
         run: python default_assets/manifests.py
 
+      - name: install build deps (windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install -y rcedit
+
       - name: Retrieve extension artifacts
         uses: actions/download-artifact@v4
         with:
