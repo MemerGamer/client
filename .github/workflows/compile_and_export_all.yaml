@@ -20,27 +20,27 @@ jobs:
       fail-fast: false
       matrix:
         export_type:
-          - "macOS"
-          - "Windows (amd64)"
-          - "Linux (amd64)"
-          - "Linux (arm64)"
+          - "macos"
+          - "windows_amd64"
+          - "linux_amd64"
+          - "linux_arm64"
         include:
-          - export_type: "macOS"
+          - export_type: "macos"
             os: macos-latest
             name: "macos"
             arch: native
 
-          - export_type: "Windows (amd64)"
+          - export_type: "windows_amd64"
             os: windows-latest
             name: "windows"
             arch: native
 
-          - export_type: "Linux (amd64)"
+          - export_type: "linux_amd64"
             os: ubuntu-24.04
             name: "linux_amd64"
             arch: native
 
-          - export_type: "Linux (arm64)"
+          - export_type: "linux_arm64"
             os: ubuntu-24.04
             name: "linux_aarch64"
             arch: aarch64

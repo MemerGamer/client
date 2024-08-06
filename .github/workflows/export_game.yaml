@@ -79,11 +79,19 @@ jobs:
 
       - name: Export Client
         shell: bash
-        run: ${{ steps.setup_godot.outputs.GODOT_CONSOLE_EXE }} --headless --export-release 'Client ${{ inputs.GAME_EXPORT_NAME }}' project.godot
+        run: |
+            python ./utility_scripts/export_game.py \
+                --godot_path  ${{ steps.setup_godot.outputs.GODOT_CONSOLE_EXE }} \
+                --export_type client \
+                --export_platform ${{ inputs.GAME_EXPORT_NAME }}
 
       - name: Export Server
         shell: bash
-        run: ${{ steps.setup_godot.outputs.GODOT_CONSOLE_EXE }} --headless --export-release 'Server ${{ inputs.GAME_EXPORT_NAME }}' project.godot
+        run: 
+            python ./utility_scripts/export_game.py \
+                --godot_path  ${{ steps.setup_godot.outputs.GODOT_CONSOLE_EXE }} \
+                --export_type server \
+                --export_platform ${{ inputs.GAME_EXPORT_NAME }}
         
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
