@@ -97,25 +97,12 @@ func try_activate() -> bool:
 		print("Could not activate ability. Ability has no effect.")
 		return false
 
-	if _current_effect.get_ability_type() == ActionEffect.AbilityType.PASSIVE:
-		print("Could not activate ability. Ability is passive.")
+	var activatanle_effect := _current_effect as ActiveActionEffect
+	if activatanle_effect == null:
+		print("Could not activate ability. Ability is not an active ability.")
 		return false
 
-	var current_state := _current_effect.get_activation_state()
-	if current_state == ActionEffect.ActivationState.ACTIVE:
-		print("Could not activate ability. Ability is already active.")
-		return false
-
-	if current_state == ActionEffect.ActivationState.COOLDOWN:
-		print("Could not activate ability. Ability is on cooldown.")
-		return false
-
-	if current_state == ActionEffect.ActivationState.CHANNELING:
-		print("Could not activate ability. Ability is channeling.")
-		return false
-
-	# TODO: Implement the activation of the ability
-	return true
+	return activatanle_effect.activate(_connected_unit, null)
 
 
 func _ready() -> void:

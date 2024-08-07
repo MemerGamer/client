@@ -49,19 +49,19 @@ enum ActivationState {
 enum AbilityType {
 	## Indicates that the ability is passive and can not be activated.
 	PASSIVE,
-	## Indicates that the ability is targeted and can only affect one unit.
-	## In other words this is a point and click ability.
-	SINGLE_TARGETED,
-	## Point and click ability that can affect multiple units.
-	## This is used mostly for abilities that potentially hit multiple units but are not area effects.
-	MULTILE_TARGETED,
-	## Indicates that the ability is untargeted but only affects one unit.
-	SINGLE_UNTARGETED,
-	## Indicates that an ability affects all units in an area but disappears after one use.
-	AREA_ONETIME,
-	## Indicates that an ability affects all units in an area and stays active for a duration.
-	## These DOT effects will be applied in regular intervals and on first contact.
-	AREA_CONTINUOUS
+	## Indicates that the ability that has no target selection.
+	## This means the ability will automatically select the target(s).
+	## This can either be an ability that just targets the caster or an
+	## ability that targets the nearest enemy.
+	AUTO_TARGETED,
+	## Indicates that the ability is targeted at a fixed target.
+	## This means the player will have to select a specific target to
+	## activate the ability. This is the type for point and click abilities.
+	FIXED_TARGETED,
+	## Indicates that the ability is untargeted.
+	## These abilities may affect one or more units in an area.
+	## The ability might also affect the caster.
+	DIRECTION_TARGETED,
 }
 
 # Common fields for all action effects

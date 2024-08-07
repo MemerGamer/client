@@ -15,7 +15,7 @@ signal died
 ## Emitted every time the current stats of the unit change.
 ## This signal is used to update the UI elements.
 ## The signal does not contain any arguments and they have to be fetched from the unit itself.
-signal current_stats_changed
+signal current_stats_changed(old_stats: StatCollection, new_stats: StatCollection)
 
 ## Emitted when the unit gets healed.
 ## This signal is used to trigger extra healing effects.
@@ -179,7 +179,7 @@ func _ready():
 
 	_setup_scene_elements()
 	_setup_default_signals()
-	current_stats_changed.emit()
+	current_stats_changed.emit(current_stats, current_stats)
 
 
 func _setup_scene_elements():
@@ -305,7 +305,9 @@ func _setup_scene_elements():
 	healthbar_node.name = "Healthbar"
 	add_child(healthbar_node)
 	healthbar_node.update_healthbar(self)
-	current_stats_changed.connect(func(): healthbar_node.update_healthbar(self))
+	current_stats_changed.connect(
+		func(_old_stats, _new_stats): healthbar_node.update_healthbar(self)
+	)
 
 	# set up the attack range visualizer
 	var attack_range_mesh = TorusMesh.new()
@@ -386,6 +388,8 @@ func _spawn_projectile(_args):
 
 # Stats related things
 func level_up(times: int = 1):
+	var old_stats := current_stats.get_copy()
+
 	base_stats.add(per_level_stats, times)
 	maximum_stats.add(per_level_stats, times)
 	current_stats.add(per_level_stats, times)
@@ -393,7 +397,7 @@ func level_up(times: int = 1):
 	if player_controlled:
 		print("Level up!")
 
-	current_stats_changed.emit()
+	current_stats_changed.emit(old_stats, current_stats)
 
 	level += times
 	required_exp = get_exp_for_levelup(level + 1)
@@ -484,6 +488,8 @@ func give_gold(amount: int):
 
 
 func purchase_item(_item: Item, gold_cost: int, new_inventory: Array[Item]):
+	var old_stats := current_stats.get_copy()
+
 	# make sure the old inventory is disconnected
 	for item in item_list:
 		var item_effects = item.effects
@@ -518,7 +524,7 @@ func purchase_item(_item: Item, gold_cost: int, new_inventory: Array[Item]):
 	maximum_stats.add(_item.get_stats())
 	current_stats.add(_item.get_stats())
 
-	current_stats_changed.emit()
+	current_stats_changed.emit(old_stats, current_stats)
 
 	# mark the ui to be updated
 	items_changed = true
@@ -535,6 +541,8 @@ func update_target_location(target_location: Vector3):
 func take_damage(caster: Unit, is_crit: bool, damage_type: DamageType, damage_amount: int):
 	if not can_take_damage():
 		return
+
+	var old_stats = current_stats.get_copy()
 
 	# apply all damage reduction effects
 	var remaning_damage = damage_amount
@@ -585,7 +593,7 @@ func take_damage(caster: Unit, is_crit: bool, damage_type: DamageType, damage_am
 		_die(caster)
 
 	# This simply updates all UI elements with the latest stats
-	current_stats_changed.emit()
+	current_stats_changed.emit(old_stats, current_stats)
 
 
 func _should_crit() -> bool:
@@ -699,7 +707,7 @@ func can_take_damage() -> bool:
 	return cc_state & CCTypesRegistry.CC_MASK_TAKE_DAMAGE == 0
 
 
-func _update_range_visualizer():
+func _update_range_visualizer(_old_stats: StatCollection, _new_stats: StatCollection):
 	attack_range_visualizer.mesh.inner_radius = current_stats.attack_range * 0.0099
 	attack_range_visualizer.mesh.outer_radius = current_stats.attack_range * 0.01
 
@@ -707,6 +715,8 @@ func _update_range_visualizer():
 func _passive_regen_handler():
 	if not is_alive:
 		return
+
+	var old_stats := current_stats.get_copy()
 
 	# first we regen the mana
 	if current_stats.mana_regen > 0:
@@ -721,7 +731,7 @@ func _passive_regen_handler():
 		# which will update the UI elements.
 		healed.emit(self, self, current_stats.health_regen)
 	else:
-		current_stats_changed.emit()
+		current_stats_changed.emit(old_stats, current_stats)
 
 
 func _windup_finished_ranged(caster, target):
@@ -778,6 +788,8 @@ func _healed_handler(_caster: Unit, target: Unit, amount: float):
 	if target != self:
 		return
 
+	var old_stats := current_stats.get_copy()
+
 	current_stats.health += int(amount)
 
 	if current_stats.health >= maximum_stats.health:
@@ -787,7 +799,7 @@ func _healed_handler(_caster: Unit, target: Unit, amount: float):
 
 		current_stats.health = maximum_stats.health
 
-	current_stats_changed.emit()
+	current_stats_changed.emit(old_stats, current_stats)
 
 
 func get_current_state_name() -> String:
