@@ -11,17 +11,5 @@ SET SCCACHE_DIR=".sccache"
 
 SET CCACHE_SLOPPINESS="locale,time_macros,include_file_ctime,include_file_mtime"
 
-:: check if ccache is installed
-where /q ccache
-IF ERRORLEVEL 1 (
-    where /q sccache
-    IF ERRORLEVEL 1 (
-        %*
-    ) ELSE (
-        :: ccache is installed
-        sccache %*
-    )
-) ELSE (
-    :: ccache is installed
-    ccache %*
-)
+%*
+
