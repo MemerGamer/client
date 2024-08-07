@@ -130,6 +130,8 @@ var item_slots_passive: Array[Item] = []
 
 var items_changed: bool = false
 
+var abilities: Array[Ability] = []
+
 # Each bit of cc_state represents a different type of crowd control.
 var cc_state: int = 0
 var effect_array: Array[UnitEffect] = []
@@ -266,7 +268,11 @@ func _setup_scene_elements():
 	aa_cooldown_node.process_callback = Timer.TIMER_PROCESS_PHYSICS
 	auto_attack_node.add_child(aa_cooldown_node)
 
+	for ability in abilities:
+		abilities_node.add_child(ability)
+
 	abilities_node.add_child(auto_attack_node)
+
 	add_child(abilities_node)
 
 	# set up projectile spawning
@@ -639,19 +645,14 @@ func trigger_ability(_index: int):
 		print("Abilities node not found.")
 		return
 
-	if _index >= abilities_node.get_child_count():
-		print(
-			(
-				"Ability (%s) larger than the amount of known abilities (%s)."
-				% [str(_index), str(abilities_node.get_child_count())]
-			)
-		)
+	var ability_cast_name = "ability_" + str(_index)
+	var ability_node := abilities_node.get_node(ability_cast_name) as Ability
+	if ability_node == null:
+		print("Ability not found (%s)." % ability_cast_name)
 		return
 
-	var ability_node = get_node("Abilities").get_child(_index)
-	if ability_node == null:
-		print("Ability not found (%s)." % str(_index))
-		return
+	ability_node.try_activate()
+	print("Triggering ability %s." % ability_cast_name)
 
 
 func apply_effect(effect: UnitEffect):

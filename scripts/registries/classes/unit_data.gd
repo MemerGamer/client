@@ -45,6 +45,8 @@ var aggro_type: AggroType
 var aggro_distance: float = 1.0
 var deaggro_distance: float = 3.0
 
+var abilities: Dictionary = {}
+
 
 static func from_dict(_json: Dictionary, _registry: RegistryBase):
 	if not _registry:
@@ -195,6 +197,26 @@ static func from_dict(_json: Dictionary, _registry: RegistryBase):
 		raw_json_data, "deaggro_distance", 3.0
 	)
 
+	if raw_json_data.has("abilities"):
+		var raw_abilities = raw_json_data["abilities"] as Dictionary
+		if raw_abilities == null:
+			print("Unit (%s): abilities must be an dictionary." % new_unit_id_str)
+			return false
+
+		var ability_keys = raw_abilities.keys()
+		for ability_key in ability_keys:
+			var raw_ability = raw_abilities[ability_key] as Dictionary
+			if raw_ability == null:
+				print("Unit (%s): Failed to load ability, not a valid dict." % new_unit_id_str)
+				return false
+
+			var new_ability = Ability.from_dict(raw_ability)
+			if new_ability == null:
+				print("Unit (%s): Failed to load ability, invalid data." % new_unit_id_str)
+				return false
+
+			new_unit.abilities[ability_key] = new_ability
+
 	return new_unit
 
 
@@ -284,6 +306,13 @@ func spawn(spawn_args: Dictionary):
 
 	if spawn_gold > 0:
 		new_unit.give_gold(spawn_gold)
+
+	# add all the abilities to the unit
+	var ability_keys = abilities.keys()
+	for ability_key in ability_keys:
+		var new_ability = abilities[ability_key].get_copy()
+		new_ability.name = ability_key
+		new_unit.abilities.append(new_ability)
 
 	# check if the unit should be spawned as a character
 	# if no value is provided use the one in the unit data
