@@ -1,13 +1,10 @@
 extends Node3D
 
-@export var cur_zoom: int
+const MoveMarker := preload("res://scenes/effects/move_marker.tscn")
 
-@onready var spring_arm: SpringArm3D = $SpringArm3D
-@onready var camera: Camera3D = $SpringArm3D/Camera3D
+@export var cur_zoom: int
 #@onready var attack_move_cast: ShapeCast3D = $AttackMoveCast
 @export var server_listener: Node
-
-@export var MoveMarker: PackedScene
 
 var camera_target_position := Vector3.ZERO
 var initial_mouse_position := Vector2.ZERO
@@ -18,6 +15,9 @@ var character: Unit
 var attack_collider: Area3D
 
 var last_movement_gamepad = false
+
+@onready var spring_arm: SpringArm3D = $SpringArm3D
+@onready var camera: Camera3D = $SpringArm3D/Camera3D
 
 @onready var marker = MoveMarker.instantiate()
 #@export var player := 1:
@@ -372,8 +372,8 @@ func get_character(pid: int) -> Node:
 				character = child
 				return child
 		return null
-	else:
-		return character
+
+	return character
 
 
 func try_purchasing_item(item_name: String) -> void:

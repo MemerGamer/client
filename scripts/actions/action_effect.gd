@@ -129,7 +129,7 @@ static func from_dict(_dict: Dictionary) -> ActionEffect:
 	effect_instance._display_id = Identifier.from_string(str(_dict["display_id"]))
 	effect_instance._is_exclusive = JsonHelper.get_optional_bool(_dict, "is_exclusive", false)
 
-	if not effect_instance.special_from_dict(_dict):
+	if not effect_instance.init_from_dict(_dict):
 		print("Could not create action effect from dictionary. Could not load data.")
 		return null
 
@@ -190,7 +190,7 @@ func get_description_string(_caster: Unit) -> String:
 ## The dictionary should contain all the data needed to create the
 ## specific action effect subclass.
 ## The return value should be true if the loading was successful
-func special_from_dict(_dict: Dictionary) -> bool:
+func init_from_dict(_dict: Dictionary) -> bool:
 	return false
 
 
