@@ -69,6 +69,8 @@ Every indivisual stat can be retreived from one of the following stat sets:
 * `m`, `max` -> The maximum stats of the actor. This stat set is rarely affected by temporary effects like buffs.
 * `c`, `curr`, `current` -> The current stats of the actor. This is affected by basically everything happening with the unit.
 * `b`, `base` -> The base stats of the unit. These are only changed by the level and nothing else.
+* `miss`, `missing` -> The missing amount of the max stats. This is the result of max - curr.
+* `bonus` -> The bonus stat amount. This is the amount that either max or curr are above the base stats.
 
 ### Possible stat names
 

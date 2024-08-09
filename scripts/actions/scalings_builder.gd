@@ -95,8 +95,12 @@ static func _get_next_scaled_stat(tokens):
 			stat_set = "max"
 		"c", "curr", "current":
 			stat_set = "current"
+		"miss", "missing":
+			stat_set = "missing"
 		"b", "base":
 			stat_set = "base"
+		"bonus":
+			stat_set = "bonus"
 		_:
 			print("Invalid stat set")
 			return null
@@ -124,11 +128,20 @@ static func create_unit_stat_getter_func(stat_set: String, stat_getter: Callable
 			return func(_unit) -> float: return stat_getter.call(_unit.maximum_stats)
 		"current":
 			return func(_unit) -> float: return stat_getter.call(_unit.current_stats)
+		"missing":
+			return func(_unit) -> float: return stat_getter.call(StatCollection.subtract(_unit.maximum_stats, _unit.current_stats))
 		"base":
 			return func(_unit) -> float: return stat_getter.call(_unit.base_stats)
+		"bonus":
+			return func(_unit) -> float: return stat_getter.call(_get_bonus_stats(_unit.base_stats, _unit.current_stats, _unit.maximum_stats))
 		_:
 			print("Invalid stat set " + stat_set)
 			return func(_unit) -> float: return 0.0
+
+
+static func _get_bonus_stats(base_stats: StatCollection, current_stats: StatCollection, max_stats: StatCollection) -> StatCollection:
+	var highest_stats = StatCollection.max(max_stats, current_stats)
+	return StatCollection.subtract(highest_stats, base_stats)
 
 
 static func _get_stat_translation(actor: String, stat_set: String, stat_name: String, scaling_value: float, final_stat_getter: Callable) -> Callable:

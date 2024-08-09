@@ -454,3 +454,75 @@ static func sum(stats: Array[StatCollection]) -> StatCollection:
 		result.add(stat)
 
 	return result
+
+
+static func subtract(_stat: StatCollection, _sub: StatCollection) -> StatCollection:
+	var stat = StatCollection.new()
+	stat.health = _stat.health - _sub.health
+	stat.health_regen = _stat.health_regen - _sub.health_regen
+
+	stat.mana = _stat.mana - _sub.mana
+	stat.mana_regen = _stat.mana_regen - _sub.mana_regen
+
+	stat.armor = _stat.armor - _sub.armor
+	stat.magic_resist = _stat.magic_resist - _sub.magic_resist
+
+	stat.armor_pen_flat = _stat.armor_pen_flat - _sub.armor_pen_flat
+	stat.armor_pen_percent = _stat.armor_pen_percent - _sub.armor_pen_percent
+
+	stat.magic_pen_flat = _stat.magic_pen_flat - _sub.magic_pen_flat
+	stat.magic_pen_percent = _stat.magic_pen_percent - _sub.magic_pen_percent
+
+	stat.attack_damage = _stat.attack_damage - _sub.attack_damage
+	stat.attack_speed = _stat.attack_speed - _sub.attack_speed
+	stat.attack_range = _stat.attack_range - _sub.attack_range
+	stat.attack_crit_chance = _stat.attack_crit_chance - _sub.attack_crit_chance
+	stat.attack_crit_damage = _stat.attack_crit_damage - _sub.attack_crit_damage
+
+	stat.ability_power = _stat.ability_power - _sub.ability_power
+	stat.ability_haste = _stat.ability_haste - _sub.ability_haste
+
+	stat.omnivamp = _stat.omnivamp - _sub.omnivamp
+	stat.physical_vamp = _stat.physical_vamp - _sub.physical_vamp
+	stat.magic_vamp = _stat.magic_vamp - _sub.magic_vamp
+	stat.true_vamp = _stat.true_vamp - _sub.true_vamp
+
+	stat.movement_speed = _stat.movement_speed - _sub.movement_speed
+
+	return stat
+
+
+static func max(_stat: StatCollection, _max: StatCollection) -> StatCollection:
+	var stat = StatCollection.new()
+	stat.health = max(_stat.health, _max.health)
+	stat.health_regen = max(_stat.health_regen, _max.health_regen)
+
+	stat.mana = max(_stat.mana, _max.mana)
+	stat.mana_regen = max(_stat.mana_regen, _max.mana_regen)
+
+	stat.armor = max(_stat.armor, _max.armor)
+	stat.magic_resist = max(_stat.magic_resist, _max.magic_resist)
+
+	stat.armor_pen_flat = max(_stat.armor_pen_flat, _max.armor_pen_flat)
+	stat.armor_pen_percent = max(_stat.armor_pen_percent, _max.armor_pen_percent)
+
+	stat.magic_pen_flat = max(_stat.magic_pen_flat, _max.magic_pen_flat)
+	stat.magic_pen_percent = max(_stat.magic_pen_percent, _max.magic_pen_percent)
+
+	stat.attack_damage = max(_stat.attack_damage, _max.attack_damage)
+	stat.attack_speed = max(_stat.attack_speed, _max.attack_speed)
+	stat.attack_range = max(_stat.attack_range, _max.attack_range)
+	stat.attack_crit_chance = max(_stat.attack_crit_chance, _max.attack_crit_chance)
+	stat.attack_crit_damage = max(_stat.attack_crit_damage, _max.attack_crit_damage)
+
+	stat.ability_power = max(_stat.ability_power, _max.ability_power)
+	stat.ability_haste = max(_stat.ability_haste, _max.ability_haste)
+
+	stat.omnivamp = max(_stat.omnivamp, _max.omnivamp)
+	stat.physical_vamp = max(_stat.physical_vamp, _max.physical_vamp)
+	stat.magic_vamp = max(_stat.magic_vamp, _max.magic_vamp)
+	stat.true_vamp = max(_stat.true_vamp, _max.true_vamp)
+
+	stat.movement_speed = max(_stat.movement_speed, _max.movement_speed)
+
+	return stat
