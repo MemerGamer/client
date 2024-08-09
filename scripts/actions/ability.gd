@@ -111,13 +111,6 @@ func _ready() -> void:
 		parent_node = parent_node.get_parent()
 		_connected_unit = parent_node as Unit
 
-	var abilites_node := _connected_unit.get_node("Abilities")
-	if abilites_node == null:
-		print("Could not connect ability to unit. Unit has no abilities node.")
-		return
-
-	abilites_node.add_child(self)
-
 	if _current_effect != null:
 		_current_effect.connect_to_unit(_connected_unit)
 
