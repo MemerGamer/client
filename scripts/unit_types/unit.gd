@@ -416,12 +416,17 @@ func _spawn_projectile(_args):
 	new_projectile.speed = projectile_config["speed"]
 	new_projectile.damage_type = projectile_config["damage_type"]
 
-	if player_controlled:
-		new_projectile.damage_src = SourceType.PLAYER_BASIC_ATTACK
-	elif is_structure:
-		new_projectile.damage_src = SourceType.STRUCTURE_BASIC_ATTACK
+	if projectile_config.has("source_type"):
+		new_projectile.damage_src = JsonHelper.get_optional_enum(
+			projectile_config, "source_type", SourceType, SourceType.UNIT_BASIC_ATTACK
+		)
 	else:
-		new_projectile.damage_src = SourceType.UNIT_BASIC_ATTACK
+		if player_controlled:
+			new_projectile.damage_src = SourceType.PLAYER_BASIC_ATTACK
+		elif is_structure:
+			new_projectile.damage_src = SourceType.STRUCTURE_BASIC_ATTACK
+		else:
+			new_projectile.damage_src = SourceType.UNIT_BASIC_ATTACK
 
 	new_projectile.is_crit = _should_crit()
 

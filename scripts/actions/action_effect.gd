@@ -102,7 +102,7 @@ var _effect_source: Unit.SourceType = Unit.SourceType.ITEM_EFFECT
 ## specific action effect subclass.
 ## The return value should be the new action effect instance or null if the
 ## creation failed.
-static func from_dict(_dict: Dictionary) -> ActionEffect:
+static func from_dict(_dict: Dictionary, is_ability: bool = false) -> ActionEffect:
 	if not _dict.has("base_id"):
 		print("Could not create action effect from dictionary. Dictionary has no base_id key.")
 		return null
@@ -130,14 +130,19 @@ static func from_dict(_dict: Dictionary) -> ActionEffect:
 
 	effect_instance._display_id = Identifier.from_string(str(_dict["display_id"]))
 	effect_instance._is_exclusive = JsonHelper.get_optional_bool(_dict, "is_exclusive", false)
+
+	var fallback_source = Unit.SourceType.ITEM_EFFECT
+	if is_ability:
+		fallback_source = Unit.SourceType.ABILITY_SINGLE
+
 	effect_instance._effect_source = (
 		JsonHelper.get_optional_enum(
-			_dict, "effect_source", Unit.PARSE_SOURCE_TYPE, Unit.SourceType.ITEM_EFFECT
+			_dict, "effect_source", Unit.PARSE_SOURCE_TYPE, fallback_source
 		)
 		as Unit.SourceType
 	)
 
-	if not effect_instance.init_from_dict(_dict):
+	if not effect_instance.init_from_dict(_dict, is_ability):
 		print("Could not create action effect from dictionary. Could not load data.")
 		return null
 
@@ -198,7 +203,7 @@ func get_description_string(_caster: Unit) -> String:
 ## The dictionary should contain all the data needed to create the
 ## specific action effect subclass.
 ## The return value should be true if the loading was successful
-func init_from_dict(_dict: Dictionary) -> bool:
+func init_from_dict(_dict: Dictionary, _is_ability: bool = false) -> bool:
 	return false
 
 

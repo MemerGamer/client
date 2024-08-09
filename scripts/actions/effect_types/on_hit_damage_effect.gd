@@ -19,7 +19,7 @@ var trigger_sources: Array[Unit.SourceType] = [
 var can_crit: bool = false
 
 
-func init_from_dict(_dict: Dictionary) -> bool:
+func init_from_dict(_dict: Dictionary, _is_ability: bool = false) -> bool:
 	if not _dict.has("damage") and not _dict.has("scaling"):
 		print(
 			"Could not create OnHitDamageEffect from dictionary. Dictionary is missing required keys."

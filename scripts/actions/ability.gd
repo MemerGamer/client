@@ -58,7 +58,7 @@ static func from_dict(_dict: Dictionary) -> Ability:
 
 		ability_data.merge(base_values, true)
 
-		var ability_effect := ActionEffect.from_dict(ability_data)
+		var ability_effect := ActionEffect.from_dict(ability_data, true)
 		if ability_effect == null:
 			print("Could not create ability from dictionary. Could not load data.")
 			return null

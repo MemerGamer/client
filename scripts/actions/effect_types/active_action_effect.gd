@@ -14,7 +14,7 @@ var cooldown_timer := Timer.new()
 var _current_haste: float = 0.0
 
 
-func init_from_dict(_dict: Dictionary) -> bool:
+func init_from_dict(_dict: Dictionary, _is_ability: bool = false) -> bool:
 	if not _dict.has("cooldown"):
 		print(
 			"Could not create ActiveActionEffect from dictionary. Dictionary is missing required keys."
