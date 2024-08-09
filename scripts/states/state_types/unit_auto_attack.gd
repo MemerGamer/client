@@ -1,18 +1,13 @@
 class_name UnitAutoAttack
 extends State
 
-var windup_timer: Timer
-var cooldown_timer: Timer
 var target_unit: Unit
+
+var basic_attack_ability: Ability
 
 
 func enter(entity: Unit, _args = null):
-	# Configure Timers
-	windup_timer = entity.get_node("Abilities/AutoAttack/AAWindup")
-	cooldown_timer = entity.get_node("Abilities/AutoAttack/AACooldown")
-
-	# Subscribe to timer timeout
-	windup_timer.timeout.connect(func(): do_attack(entity))
+	basic_attack_ability = entity.get_node("Abilities/basic_attack")
 
 	modify(entity, _args)
 
@@ -37,55 +32,34 @@ func modify(entity: Unit, _args = null):
 		entity.advance_state()
 		return
 
+	basic_attack_ability.try_activate(target_unit)
+
 
 func exit(_entity: Unit):
-	for conn in windup_timer.timeout.get_connections():
-		windup_timer.timeout.disconnect(conn["callable"])
+	pass
 
 
 func update_tick_server(entity: Unit, delta):
 	entity.nav_agent.target_position = entity.global_position
 
-	if not entity.target_entity:
+	if not target_unit:
 		entity.advance_state()
 		return
 
-	if not entity.target_entity.is_alive:
+	if not target_unit.is_alive:
 		entity.advance_state()
 		return
 
-	if (
-		entity.target_entity.global_position.distance_to(entity.global_position)
-		< (entity.current_stats.attack_range * 0.01)
-	):
-		start_windup(entity)
-		return
+	var should_move = (
+		entity.global_position.distance_to(target_unit.global_position)
+		> entity.current_stats.attack_range * 0.01
+	)
 
-	if not windup_timer.is_stopped():
-		return
+	if not should_move:
+		should_move = not basic_attack_ability.try_activate(target_unit)
 
-	entity.nav_agent.target_position = entity.target_entity.global_position
-	entity.move_on_path(delta)
+	var current_state = basic_attack_ability._current_effect.get_activation_state()
 
-
-func start_windup(entity):
-	if not entity.can_attack():
-		return
-	if not windup_timer.is_stopped():
-		return
-	if not cooldown_timer.is_stopped():
-		return
-
-	var attack_time = float(100.0 / entity.current_stats.attack_speed)
-	windup_timer.wait_time = attack_time * entity.windup_fraction
-	cooldown_timer.wait_time = attack_time * (1.0 - entity.windup_fraction)
-
-	windup_timer.start()
-
-
-func do_attack(entity):
-	if not entity.can_attack():
-		return
-
-	entity.windup_finished.emit(entity, entity.target_entity)
-	cooldown_timer.start()
+	if should_move and current_state != ActionEffect.ActivationState.CHANNELING:
+		entity.nav_agent.target_position = target_unit.global_position
+		entity.move_on_path(delta)

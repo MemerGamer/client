@@ -119,7 +119,8 @@ static func from_dict(_dict: Dictionary, is_ability: bool = false) -> ActionEffe
 			return null
 		"OnHitDamageEffect":
 			effect_instance = OnHitDamageEffect.new()
-
+		"PointAndClickProjectile":
+			effect_instance = PointAndClickProjectile.new()
 		_:
 			print("Invalid action effect class name: " + _dict["base_id"])
 			return null
@@ -207,6 +208,20 @@ func init_from_dict(_dict: Dictionary, _is_ability: bool = false) -> bool:
 	return false
 
 
-func get_copy() -> ActionEffect:
-	print("ActionEffect.get_copy() is not implemented.")
-	return null
+func get_copy(new_effect: ActionEffect = null) -> ActionEffect:
+	if new_effect == null:
+		new_effect = ActionEffect.new()
+
+	new_effect._ability_type = _ability_type
+	new_effect._activation_state = _activation_state
+
+	new_effect._ability_type = _ability_type
+
+	new_effect._is_loaded = _is_loaded
+	new_effect._display_id = _display_id
+
+	new_effect._is_exclusive = _is_exclusive
+
+	new_effect._effect_source = _effect_source
+
+	return new_effect

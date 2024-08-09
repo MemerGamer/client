@@ -79,9 +79,6 @@ func _enter_aggro_range(body: PhysicsBody3D):
 	if collided_unit == null:
 		return
 
-	if collided_unit == controlled_unit:
-		return
-
 	if collided_unit.team == controlled_unit.team or collided_unit.team == 0:
 		return
 

@@ -11,9 +11,7 @@ var scaling_display = null
 
 var damage_type: Unit.DamageType = Unit.DamageType.PHYSICAL
 var trigger_sources: Array[Unit.SourceType] = [
-	Unit.SourceType.PLAYER_BASIC_ATTACK,
-	Unit.SourceType.UNIT_BASIC_ATTACK,
-	Unit.SourceType.STRUCTURE_BASIC_ATTACK,
+	Unit.SourceType.BASIC_ATTACK,
 ]
 
 var can_crit: bool = false
@@ -50,8 +48,12 @@ func init_from_dict(_dict: Dictionary, _is_ability: bool = false) -> bool:
 	return true
 
 
-func get_copy() -> ActionEffect:
-	var new_effect = OnHitDamageEffect.new()
+func get_copy(new_effect: ActionEffect = null) -> ActionEffect:
+	if new_effect == null:
+		new_effect = OnHitDamageEffect.new()
+
+	new_effect = super(new_effect)
+
 	new_effect.damage = damage
 	new_effect.scaling_calc = scaling_calc
 	new_effect.damage_type = damage_type

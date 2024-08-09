@@ -40,6 +40,7 @@ static func from_dict(_dict: Dictionary) -> Ability:
 			print("Could not create ability from dictionary. Could not load data.")
 			return null
 
+		ability_effect.name = ability_instance._display_id.to_string()
 		ability_instance._ability_levels.append(ability_effect)
 		ability_instance._current_effect = ability_effect
 
@@ -50,8 +51,8 @@ static func from_dict(_dict: Dictionary) -> Ability:
 		print("Could not create ability from dictionary. Could not load data.")
 		return null
 
-	for ability_level in ability_levels:
-		var ability_data := ability_level as Dictionary
+	for ability_level_num in range(ability_levels.size()):
+		var ability_data := ability_levels[ability_level_num] as Dictionary
 		if ability_data == null:
 			print("Could not create ability from dictionary. Could not load data.")
 			return null
@@ -63,6 +64,9 @@ static func from_dict(_dict: Dictionary) -> Ability:
 			print("Could not create ability from dictionary. Could not load data.")
 			return null
 
+		ability_effect.name = (
+			ability_instance._display_id.to_string() + "_" + str(ability_level_num)
+		)
 		ability_instance._ability_levels.append(ability_effect)
 
 	if not _dict.has("display_id"):
@@ -79,7 +83,9 @@ func get_copy() -> Ability:
 	new_ability._can_levelup = _can_levelup
 	new_ability._level = _level
 	for _ability_level in _ability_levels:
-		new_ability._ability_levels.append(_ability_level.get_copy())
+		var new_ability_level = _ability_level.get_copy()
+		new_ability_level.name = _ability_level.name
+		new_ability._ability_levels.append(new_ability_level)
 
 	if _current_effect != null:
 		var ability_index := _ability_levels.find(_current_effect)
@@ -92,7 +98,7 @@ func get_level() -> int:
 	return _level
 
 
-func try_activate() -> bool:
+func try_activate(target = null) -> bool:
 	if _current_effect == null:
 		print("Could not activate ability. Ability has no effect.")
 		return false
@@ -102,7 +108,7 @@ func try_activate() -> bool:
 		print("Could not activate ability. Ability is not an active ability.")
 		return false
 
-	return activatanle_effect.activate(_connected_unit, null)
+	return activatanle_effect.activate(_connected_unit, target)
 
 
 func _ready() -> void:
@@ -112,6 +118,7 @@ func _ready() -> void:
 		_connected_unit = parent_node as Unit
 
 	if _current_effect != null:
+		add_child(_current_effect)
 		_current_effect.connect_to_unit(_connected_unit)
 
 
@@ -126,9 +133,11 @@ func upgrade():
 
 	if _current_effect != null:
 		_current_effect.disconnect_from_unit(_connected_unit)
+		remove_child(_current_effect)
 		_current_effect = null
 
 	_current_effect = _ability_levels[_level]
 	_level += 1
 
+	add_child(_current_effect)
 	_current_effect.connect_to_unit(_connected_unit)

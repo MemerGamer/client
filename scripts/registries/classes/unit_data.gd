@@ -20,13 +20,10 @@ const UnitScript = preload("res://scripts/unit_types/unit.gd")
 
 var stats = StatCollection.new()
 var stat_growth = StatCollection.new()
-var windup_fraction: float = 0.1
 
 var id: Identifier
 var model_id: Identifier
 var icon_id: Identifier
-
-var projectile_config: Dictionary
 
 var tags: Array[String] = []
 
@@ -163,32 +160,6 @@ static func from_dict(_json: Dictionary, _registry: RegistryBase):
 	new_unit.spawn_exp = JsonHelper.get_optional_int(raw_json_data, "spawn_exp", 0)
 	new_unit.spawn_gold = JsonHelper.get_optional_int(raw_json_data, "spawn_gold", 0)
 
-	if raw_json_data.has("attack_projectile"):
-		var new_projectile_config = {}
-		var raw_projectile_config = raw_json_data["attack_projectile"]
-		if raw_projectile_config is Dictionary:
-			new_projectile_config["model"] = str(raw_projectile_config["model"])
-			new_projectile_config["speed"] = float(raw_projectile_config["speed"])
-			new_projectile_config["model_scale"] = JsonHelper.get_vector3(
-				raw_projectile_config, "model_scale", Vector3(1.0, 1.0, 1.0)
-			)
-			new_projectile_config["model_rotation"] = JsonHelper.get_vector3(
-				raw_projectile_config, "model_rotation", Vector3(0.0, 0.0, 0.0)
-			)
-			new_projectile_config["spawn_offset"] = JsonHelper.get_vector3(
-				raw_projectile_config, "spawn_offset", Vector3(0.0, 0.0, 0.0)
-			)
-			new_projectile_config["damage_type"] = JsonHelper.get_optional_enum(
-				raw_projectile_config,
-				"damage_type",
-				Unit.PARSE_DAMAGE_TYPE,
-				Unit.DamageType.PHYSICAL
-			)
-
-			new_unit.projectile_config = new_projectile_config
-
-	new_unit.windup_fraction = JsonHelper.get_optional_number(raw_json_data, "windup_fraction", 0.1)
-
 	new_unit.aggro_type = JsonHelper.get_optional_enum(
 		raw_json_data, "aggro_type", PARSE_AGGRO_TYPE, AggroType.PASSIVE
 	)
@@ -276,7 +247,6 @@ func spawn(spawn_args: Dictionary):
 	new_unit.name = spawn_args["name"]
 	new_unit.team = spawn_args["team"]
 	new_unit.position = spawn_args["position"]
-	new_unit.basic_attack_projectile_config = projectile_config
 
 	new_unit.server_position = new_unit.position
 
@@ -284,7 +254,6 @@ func spawn(spawn_args: Dictionary):
 	new_unit.current_stats = stats.get_copy()
 	new_unit.per_level_stats = stat_growth.get_copy()
 	new_unit.unit_id = id.to_string()
-	new_unit.windup_fraction = windup_fraction
 
 	new_unit.dropped_exp = kill_exp
 	new_unit.dropped_gold = kill_gold

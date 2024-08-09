@@ -23,7 +23,7 @@ signal healed(caster: Unit, target: Unit, amount: float, src: SourceType)
 
 ## Gets emitted on the caster when the windup of an attack is finished.
 ## Use this to spwan extra projectiles or apply effects to the caster.
-signal windup_finished(caster: Unit, target: Unit)
+signal targeted_cast_finished(caster: Unit, target: Unit, src: SourceType)
 
 ## Gets emitted on the caster when the attack projectile hit the target or the melee attack landed.
 ## Use this to apply effects to the target or the caster.
@@ -52,11 +52,7 @@ enum DamageType {
 ## The types of sources that can trigger damage and healing effects.
 enum SourceType {
 	## The source of the effect is a basic attack by a player
-	PLAYER_BASIC_ATTACK,
-	## The source of the effect is a basic attack by a unit
-	UNIT_BASIC_ATTACK,
-	## The source of the effect is a basic attack by a structure
-	STRUCTURE_BASIC_ATTACK,
+	BASIC_ATTACK,
 	## Indicates that a single ability proc triggered the signal
 	ABILITY_SINGLE,
 	## Indicates that a dot ability triggered the signal
@@ -79,9 +75,7 @@ const PARSE_DAMAGE_TYPE: Dictionary = {
 }
 
 const PARSE_SOURCE_TYPE: Dictionary = {
-	"player_basic_attack": SourceType.PLAYER_BASIC_ATTACK,
-	"unit_basic_attack": SourceType.UNIT_BASIC_ATTACK,
-	"structure_basic_attack": SourceType.STRUCTURE_BASIC_ATTACK,
+	"basic_attack": SourceType.BASIC_ATTACK,
 	"ability_single": SourceType.ABILITY_SINGLE,
 	"ability_dot": SourceType.ABILITY_DOT,
 	"item_effect": SourceType.ITEM_EFFECT,
@@ -131,7 +125,6 @@ var has_mana: bool = false
 var current_shielding: int = 0
 
 var turn_speed: float = 15.0
-var windup_fraction: float = 0.1
 
 var level: int = 1
 var level_exp: int = 0
@@ -175,7 +168,6 @@ var server_position := Vector3.ZERO
 var nav_agent: NavigationAgent3D
 
 var map: Node = null
-var basic_attack_projectile_config: Dictionary
 var projectile_spawner: MultiplayerSpawner
 
 var attack_range_visualizer: MeshInstance3D
@@ -286,25 +278,8 @@ func _setup_scene_elements():
 	var abilities_node = Node.new()
 	abilities_node.name = "Abilities"
 
-	var auto_attack_node = Node.new()
-	auto_attack_node.name = "AutoAttack"
-
-	var aa_windup_node = Timer.new()
-	aa_windup_node.name = "AAWindup"
-	aa_windup_node.one_shot = true
-	aa_windup_node.process_callback = Timer.TIMER_PROCESS_PHYSICS
-	auto_attack_node.add_child(aa_windup_node)
-
-	var aa_cooldown_node = Timer.new()
-	aa_cooldown_node.name = "AACooldown"
-	aa_cooldown_node.one_shot = true
-	aa_cooldown_node.process_callback = Timer.TIMER_PROCESS_PHYSICS
-	auto_attack_node.add_child(aa_cooldown_node)
-
 	for ability in abilities:
 		abilities_node.add_child(ability)
-
-	abilities_node.add_child(auto_attack_node)
 
 	add_child(abilities_node)
 
@@ -376,14 +351,6 @@ func _setup_default_signals():
 	# update the attack range visualizer when the stats change
 	current_stats_changed.connect(_update_range_visualizer)
 
-	# Do a basic attack when the windup is finished
-	# In cases the character is ranged spawn a projectile
-	# Otherwise just deal the damage directly
-	if basic_attack_projectile_config:
-		windup_finished.connect(_windup_finished_ranged)
-	else:
-		windup_finished.connect(_windup_finished_melee)
-
 	# Deal the damage when the attack hits
 	attack_connected.connect(_attack_connected)
 
@@ -416,17 +383,9 @@ func _spawn_projectile(_args):
 	new_projectile.speed = projectile_config["speed"]
 	new_projectile.damage_type = projectile_config["damage_type"]
 
-	if projectile_config.has("source_type"):
-		new_projectile.damage_src = JsonHelper.get_optional_enum(
-			projectile_config, "source_type", SourceType, SourceType.UNIT_BASIC_ATTACK
-		)
-	else:
-		if player_controlled:
-			new_projectile.damage_src = SourceType.PLAYER_BASIC_ATTACK
-		elif is_structure:
-			new_projectile.damage_src = SourceType.STRUCTURE_BASIC_ATTACK
-		else:
-			new_projectile.damage_src = SourceType.UNIT_BASIC_ATTACK
+	new_projectile.damage_src = JsonHelper.get_optional_enum(
+		projectile_config, "source_type", SourceType, SourceType.BASIC_ATTACK
+	)
 
 	new_projectile.is_crit = _should_crit()
 
@@ -781,33 +740,6 @@ func _passive_regen_handler():
 		healed.emit(self, self, current_stats.health_regen, SourceType.PASSIVE_REGEN)
 	else:
 		current_stats_changed.emit(old_stats, current_stats)
-
-
-func _windup_finished_ranged(caster, target):
-	if caster != self:
-		return
-
-	if target != target_entity:
-		return
-
-	basic_attack_projectile_config["target_entity"] = target_entity
-	projectile_spawner.spawn(basic_attack_projectile_config)
-
-
-func _windup_finished_melee(caster, target):
-	if caster != self:
-		return
-
-	if target != target_entity:
-		return
-
-	var attack_src = SourceType.UNIT_BASIC_ATTACK
-	if caster.player_controlled:
-		attack_src = SourceType.PLAYER_BASIC_ATTACK
-	elif caster.is_structure:
-		attack_src = SourceType.STRUCTURE_BASIC_ATTACK
-
-	attack_connected.emit(self, target, _should_crit(), DamageType.PHYSICAL, attack_src)
 
 
 func _attack_connected(caster, target, is_crit, damage_type, src: SourceType):
