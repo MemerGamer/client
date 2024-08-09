@@ -92,6 +92,8 @@ var _display_id: Identifier = null
 ## This is set in the generic _from_dict function and optional.
 var _is_exclusive: bool = false
 
+var _effect_source: Unit.SourceType = Unit.SourceType.ITEM_EFFECT
+
 
 ## Create a new action effect from a dictionary
 ## This will load the action effect based on the class name,
@@ -128,6 +130,12 @@ static func from_dict(_dict: Dictionary) -> ActionEffect:
 
 	effect_instance._display_id = Identifier.from_string(str(_dict["display_id"]))
 	effect_instance._is_exclusive = JsonHelper.get_optional_bool(_dict, "is_exclusive", false)
+	effect_instance._effect_source = (
+		JsonHelper.get_optional_enum(
+			_dict, "effect_source", Unit.PARSE_SOURCE_TYPE, Unit.SourceType.ITEM_EFFECT
+		)
+		as Unit.SourceType
+	)
 
 	if not effect_instance.init_from_dict(_dict):
 		print("Could not create action effect from dictionary. Could not load data.")

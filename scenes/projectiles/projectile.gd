@@ -1,9 +1,16 @@
-extends Node3D
 class_name Projectile
+extends Node3D
+
+const GPUTrailShader = preload("res://addons/gpu_trail/shaders/trail.gdshader")
+const GPUTrailDrawPassShader = preload("res://addons/gpu_trail/shaders/trail_draw_pass.gdshader")
+const GPUTrailTexture = preload("res://addons/gpu_trail/defaults/texture.tres")
+const GPUTrailCurve = preload("res://addons/gpu_trail/defaults/curve.tres")
+const GPUTrailScript = preload("res://addons/gpu_trail/GPUTrail3D.gd")
 
 var is_crit: bool = false
 var speed: float = 80.0
 var damage_type: Unit.DamageType = Unit.DamageType.PHYSICAL
+var damage_src: Unit.SourceType = Unit.SourceType.ITEM_EFFECT
 
 var target: Node = null
 var caster: Node = null
@@ -12,13 +19,7 @@ var model: String = "openchamp:particles/arrow"
 var model_scale: Vector3 = Vector3(1.0, 1.0, 1.0)
 var model_rotation: Vector3 = Vector3(0.0, 0.0, 0.0)
 
-const gpu_trail_shader = preload("res://addons/gpu_trail/shaders/trail.gdshader")
-const gpu_trail_draw_pass_shader = preload(
-	"res://addons/gpu_trail/shaders/trail_draw_pass.gdshader"
-)
-const gpu_trail_texture = preload("res://addons/gpu_trail/defaults/texture.tres")
-const gpu_trail_curve = preload("res://addons/gpu_trail/defaults/curve.tres")
-const gpu_trail_script = preload("res://addons/gpu_trail/GPUTrail3D.gd")
+var on_hit_function: Callable
 
 
 func _create_model():
@@ -50,13 +51,13 @@ func _create_model():
 
 	# add the GPU trail
 	var trail_process_material = ShaderMaterial.new()
-	trail_process_material.shader = gpu_trail_shader
+	trail_process_material.shader = GPUTrailShader
 
-	var trail_curve = gpu_trail_curve
-	var trail_ramp = gpu_trail_texture
+	var trail_curve = GPUTrailCurve
+	var trail_ramp = GPUTrailTexture
 
 	var trail_draw_pass_1_material = ShaderMaterial.new()
-	trail_draw_pass_1_material.shader = gpu_trail_draw_pass_shader
+	trail_draw_pass_1_material.shader = GPUTrailDrawPassShader
 	trail_draw_pass_1_material.set_shader_parameter(
 		"emmission_transform",
 		Projection(
@@ -71,6 +72,11 @@ func _create_model():
 	trail_draw_pass_1.material = trail_draw_pass_1_material
 
 	var trail = GPUParticles3D.new()
+	trail.script = GPUTrailScript
+	trail = trail as GPUTrail3D
+
+	trail.set_defaults()
+
 	trail.name = "GPU_trail"
 	trail.transform = Transform3D(
 		Vector3(1, 0, 0),
@@ -79,20 +85,22 @@ func _create_model():
 		Vector3(0, 0, 0.984896),
 	)
 
-	trail.amount = 100
-	trail.lifetime = 100.0
-	trail.explosiveness = 1.0
-	trail.fixed_fps = 0
+	trail.length = 15
+	trail.amount_ratio = 1.0
+
 	trail.process_material = trail_process_material
 	trail.draw_pass_1 = trail_draw_pass_1
-	trail.script = gpu_trail_script
 	trail.color_ramp = trail_ramp
 	trail.curve = trail_curve
+
 	model_node.add_child(trail)
 
 
 func _ready():
 	_create_model()
+
+	if not on_hit_function:
+		on_hit_function = _handle_auto_attack_hit
 
 	if not multiplayer.is_server():
 		return
@@ -122,14 +130,13 @@ func _process(delta):
 	var target_head = target_pos + Vector3.UP
 	var step_distance = speed * delta
 
-	# If the distance between the projectile and the target is less than the step distance, the projectile has hit
+	# If the distance between the projectile and the target is less than the step distance,
+	# the projectile has hit
 	var has_hit: bool = global_position.distance_to(target_head) < step_distance
 
 	# If the projectile has hit, deal damage and destroy the projectile
 	if has_hit:
-		if multiplayer.is_server():
-			caster.attack_connected.emit(caster, target, is_crit, damage_type)
-
+		on_hit_function.call(caster, target, is_crit, damage_type)
 		queue_free()
 		return
 
@@ -141,3 +148,8 @@ func _process(delta):
 	var dir = (target_head - global_position).normalized()
 	global_position += dir * step_distance
 	look_at(target_head)
+
+
+func _handle_auto_attack_hit(_caster, _target, _is_crit, _damage_type):
+	if multiplayer.is_server():
+		caster.attack_connected.emit(_caster, _target, _is_crit, _damage_type, damage_src)

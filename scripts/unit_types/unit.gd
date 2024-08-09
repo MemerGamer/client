@@ -19,7 +19,7 @@ signal current_stats_changed(old_stats: StatCollection, new_stats: StatCollectio
 
 ## Emitted when the unit gets healed.
 ## This signal is used to trigger extra healing effects.
-signal healed(caster: Unit, target: Unit, amount: float)
+signal healed(caster: Unit, target: Unit, amount: float, src: SourceType)
 
 ## Gets emitted on the caster when the windup of an attack is finished.
 ## Use this to spwan extra projectiles or apply effects to the caster.
@@ -28,7 +28,9 @@ signal windup_finished(caster: Unit, target: Unit)
 ## Gets emitted on the caster when the attack projectile hit the target or the melee attack landed.
 ## Use this to apply effects to the target or the caster.
 ## On hit damage effects should use this signal to apply additinal damage effects.
-signal attack_connected(caster: Unit, target: Unit, is_crit: bool, damage_type: DamageType)
+signal attack_connected(
+	caster: Unit, target: Unit, is_crit: bool, damage_type: DamageType, src: SourceType
+)
 
 ## Gets emitted on the caster after the target damage calculation has been done.
 ## This signal is used to trigger post hit effects like healing or lifesteal.
@@ -47,6 +49,26 @@ enum DamageType {
 	MAGICAL = 2,
 }
 
+## The types of sources that can trigger damage and healing effects.
+enum SourceType {
+	## The source of the effect is a basic attack by a player
+	PLAYER_BASIC_ATTACK,
+	## The source of the effect is a basic attack by a unit
+	UNIT_BASIC_ATTACK,
+	## The source of the effect is a basic attack by a structure
+	STRUCTURE_BASIC_ATTACK,
+	## Indicates that a single ability proc triggered the signal
+	ABILITY_SINGLE,
+	## Indicates that a dot ability triggered the signal
+	ABILITY_DOT,
+	## Indicates that an item effect triggered the signal
+	ITEM_EFFECT,
+	## Indicates that passive regeneration triggered the signal
+	PASSIVE_REGEN,
+	## Indicated that a lifesteal effect triggered the signal
+	LIFESTEAL,
+}
+
 ## A dictionary that maps strings to the DamageType enum.
 ## This can be used in combination with JsonHelper.get_optional_enum
 ## to parse damage types from JSON.
@@ -54,6 +76,17 @@ const PARSE_DAMAGE_TYPE: Dictionary = {
 	"true": DamageType.TRUE,
 	"physical": DamageType.PHYSICAL,
 	"magical": DamageType.MAGICAL,
+}
+
+const PARSE_SOURCE_TYPE: Dictionary = {
+	"player_basic_attack": SourceType.PLAYER_BASIC_ATTACK,
+	"unit_basic_attack": SourceType.UNIT_BASIC_ATTACK,
+	"structure_basic_attack": SourceType.STRUCTURE_BASIC_ATTACK,
+	"ability_single": SourceType.ABILITY_SINGLE,
+	"ability_dot": SourceType.ABILITY_DOT,
+	"item_effect": SourceType.ITEM_EFFECT,
+	"passive_regen": SourceType.PASSIVE_REGEN,
+	"lifesteal": SourceType.LIFESTEAL,
 }
 
 # Preloaded scripts and scenes
@@ -142,7 +175,7 @@ var server_position := Vector3.ZERO
 var nav_agent: NavigationAgent3D
 
 var map: Node = null
-var projectile_config: Dictionary
+var basic_attack_projectile_config: Dictionary
 var projectile_spawner: MultiplayerSpawner
 
 var attack_range_visualizer: MeshInstance3D
@@ -346,7 +379,7 @@ func _setup_default_signals():
 	# Do a basic attack when the windup is finished
 	# In cases the character is ranged spawn a projectile
 	# Otherwise just deal the damage directly
-	if projectile_config:
+	if basic_attack_projectile_config:
 		windup_finished.connect(_windup_finished_ranged)
 	else:
 		windup_finished.connect(_windup_finished_melee)
@@ -362,6 +395,8 @@ func _setup_default_signals():
 
 
 func _spawn_projectile(_args):
+	var projectile_config = _args as Dictionary
+
 	if not projectile_config:
 		print("Projectile config not set.")
 		return null
@@ -373,13 +408,20 @@ func _spawn_projectile(_args):
 
 	new_projectile.caster = self
 	new_projectile.position = server_position + spawn_offset
-	new_projectile.target = target_entity
+	new_projectile.target = projectile_config["target_entity"]
 
 	new_projectile.model = projectile_config["model"]
 	new_projectile.model_scale = projectile_config["model_scale"]
 	new_projectile.model_rotation = projectile_config["model_rotation"]
 	new_projectile.speed = projectile_config["speed"]
 	new_projectile.damage_type = projectile_config["damage_type"]
+
+	if player_controlled:
+		new_projectile.damage_src = SourceType.PLAYER_BASIC_ATTACK
+	elif is_structure:
+		new_projectile.damage_src = SourceType.STRUCTURE_BASIC_ATTACK
+	else:
+		new_projectile.damage_src = SourceType.UNIT_BASIC_ATTACK
 
 	new_projectile.is_crit = _should_crit()
 
@@ -538,7 +580,9 @@ func update_target_location(target_location: Vector3):
 
 
 ## Combat
-func take_damage(caster: Unit, is_crit: bool, damage_type: DamageType, damage_amount: int):
+func take_damage(
+	caster: Unit, is_crit: bool, damage_type: DamageType, damage_amount: int, src: SourceType
+):
 	if not can_take_damage():
 		return
 
@@ -547,7 +591,7 @@ func take_damage(caster: Unit, is_crit: bool, damage_type: DamageType, damage_am
 	# apply all damage reduction effects
 	var remaning_damage = damage_amount
 	for effect_call in _hit_reduction_effects:
-		remaning_damage = effect_call.call(caster, self, is_crit, damage_type, remaning_damage)
+		remaning_damage = effect_call.call(caster, self, is_crit, damage_type, remaning_damage, src)
 
 	# get the correct resistance type depending on the damage type
 	# for true damage, the resistance is 0
@@ -587,13 +631,13 @@ func take_damage(caster: Unit, is_crit: bool, damage_type: DamageType, damage_am
 			# This spawns the damage popup on all clients
 			map.on_unit_damaged(self, actual_damage, damage_type)
 
+	# This simply updates all UI elements with the latest stats
+	current_stats_changed.emit(old_stats, current_stats)
+
 	# If the health is 0 or less, the unit dies and we register the caster as the murderer.
 	if current_stats.health <= 0:
 		current_stats.health = 0
 		_die(caster)
-
-	# This simply updates all UI elements with the latest stats
-	current_stats_changed.emit(old_stats, current_stats)
 
 
 func _should_crit() -> bool:
@@ -729,7 +773,7 @@ func _passive_regen_handler():
 		# This is used to trigger extra healing effects.
 		# The healed signal will also trigger the current_stats_changed signal
 		# which will update the UI elements.
-		healed.emit(self, self, current_stats.health_regen)
+		healed.emit(self, self, current_stats.health_regen, SourceType.PASSIVE_REGEN)
 	else:
 		current_stats_changed.emit(old_stats, current_stats)
 
@@ -737,22 +781,31 @@ func _passive_regen_handler():
 func _windup_finished_ranged(caster, target):
 	if caster != self:
 		return
+
 	if target != target_entity:
 		return
 
-	projectile_spawner.spawn()
+	basic_attack_projectile_config["target_entity"] = target_entity
+	projectile_spawner.spawn(basic_attack_projectile_config)
 
 
 func _windup_finished_melee(caster, target):
 	if caster != self:
 		return
+
 	if target != target_entity:
 		return
 
-	attack_connected.emit(self, target, _should_crit(), DamageType.PHYSICAL)
+	var attack_src = SourceType.UNIT_BASIC_ATTACK
+	if caster.player_controlled:
+		attack_src = SourceType.PLAYER_BASIC_ATTACK
+	elif caster.is_structure:
+		attack_src = SourceType.STRUCTURE_BASIC_ATTACK
+
+	attack_connected.emit(self, target, _should_crit(), DamageType.PHYSICAL, attack_src)
 
 
-func _attack_connected(caster, target, is_crit, damage_type):
+func _attack_connected(caster, target, is_crit, damage_type, src: SourceType):
 	if caster != self:
 		return
 
@@ -760,7 +813,7 @@ func _attack_connected(caster, target, is_crit, damage_type):
 	if is_crit:
 		damage *= (100 + current_stats.attack_crit_damage) * 0.01
 
-	target.take_damage(caster, is_crit, damage_type, damage)
+	target.take_damage(caster, is_crit, damage_type, damage, src)
 
 
 func _damage_actually_dealt(
@@ -781,10 +834,10 @@ func _damage_actually_dealt(
 
 	if total_vamp > 0:
 		var heal_amount = int(damage * total_vamp * 0.01)
-		self.healed.emit(self, self, heal_amount)
+		self.healed.emit(self, self, heal_amount, SourceType.LIFESTEAL)
 
 
-func _healed_handler(_caster: Unit, target: Unit, amount: float):
+func _healed_handler(_caster: Unit, target: Unit, amount: float, src: SourceType):
 	if target != self:
 		return
 
@@ -793,7 +846,7 @@ func _healed_handler(_caster: Unit, target: Unit, amount: float):
 	current_stats.health += int(amount)
 
 	if current_stats.health >= maximum_stats.health:
-		if overheal:
+		if src == SourceType.LIFESTEAL and overheal:
 			var extra_health = current_stats.health - maximum_stats.health
 			current_shielding = clampi(current_shielding + extra_health, 0, max_overheal)
 

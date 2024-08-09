@@ -276,7 +276,7 @@ func spawn(spawn_args: Dictionary):
 	new_unit.name = spawn_args["name"]
 	new_unit.team = spawn_args["team"]
 	new_unit.position = spawn_args["position"]
-	new_unit.projectile_config = projectile_config
+	new_unit.basic_attack_projectile_config = projectile_config
 
 	new_unit.server_position = new_unit.position
 

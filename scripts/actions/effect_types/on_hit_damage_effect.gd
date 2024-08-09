@@ -10,6 +10,11 @@ var scaling_calc = null
 var scaling_display = null
 
 var damage_type: Unit.DamageType = Unit.DamageType.PHYSICAL
+var trigger_sources: Array[Unit.SourceType] = [
+	Unit.SourceType.PLAYER_BASIC_ATTACK,
+	Unit.SourceType.UNIT_BASIC_ATTACK,
+	Unit.SourceType.STRUCTURE_BASIC_ATTACK,
+]
 
 var can_crit: bool = false
 
@@ -89,17 +94,27 @@ func disconnect_from_unit(_unit: Unit) -> void:
 	_is_loaded = false
 
 
-func _on_attack_connected_fixed(caster: Unit, target: Unit, is_crit: bool, _damage_type) -> void:
+func _on_attack_connected_fixed(
+	caster: Unit, target: Unit, is_crit: bool, _damage_type, _damage_src
+) -> void:
 	if not target.is_alive:
 		return
 
-	target.take_damage(caster, can_crit and is_crit, damage_type, damage)
+	if _damage_src not in trigger_sources:
+		return
+
+	target.take_damage(caster, can_crit and is_crit, damage_type, damage, _effect_source)
 
 
-func _on_attack_connected_scaled(caster: Unit, target: Unit, is_crit: bool, _damage_type) -> void:
+func _on_attack_connected_scaled(
+	caster: Unit, target: Unit, is_crit: bool, _damage_type, _damage_src
+) -> void:
 	if not target.is_alive:
+		return
+
+	if _damage_src not in trigger_sources:
 		return
 
 	var raw_damage = int(scaling_calc.call(caster, target))
 
-	target.take_damage(caster, can_crit and is_crit, damage_type, raw_damage)
+	target.take_damage(caster, can_crit and is_crit, damage_type, raw_damage, _effect_source)
