@@ -174,6 +174,8 @@ var attack_range_visualizer: MeshInstance3D
 
 var action_effects: Node
 
+var audio_player: AudioStreamPlayer3D
+
 ## Each of these effects is a function that takes the caster, the target, the damage type,
 ## and the damage amount.
 ## They should return the remaining damage after the effect has been applied.
@@ -346,6 +348,14 @@ func _setup_scene_elements():
 	passive_heal_timer.timeout.connect(_passive_regen_handler)
 	add_child(passive_heal_timer)
 
+	# set up the audio playback
+	audio_player = AudioStreamPlayer3D.new()
+	audio_player.name = "UnitMainAudioPlayer"
+	audio_player.bus = "EntitySfx"
+
+	add_child(audio_player)
+	audio_player = get_node("UnitMainAudioPlayer")
+
 
 func _setup_default_signals():
 	# update the attack range visualizer when the stats change
@@ -466,9 +476,13 @@ func _reward_exp_on_death(murderer = null):
 	else:
 		murderer.minion_kills += 1
 
+	var gold_reward_sfx := load("audio://openchamp:sfx/game/kill_gold")
+
 	if rewarded_units.size() == 1:
 		murderer.give_exp(per_unit_exp)
 		murderer.give_gold(per_unit_gold)
+		murderer.audio_player.stream = gold_reward_sfx
+		murderer.audio_player.play()
 	else:
 		for _unit in rewarded_units:
 			_unit.give_exp(per_unit_exp)
@@ -478,6 +492,9 @@ func _reward_exp_on_death(murderer = null):
 				_unit.give_gold(int(per_unit_gold * 1.5))
 			else:
 				_unit.give_gold(per_unit_gold)
+
+			_unit.audio_player.stream = gold_reward_sfx
+			_unit.audio_player.play()
 
 
 ## This function returns the amount of experience required to level up.

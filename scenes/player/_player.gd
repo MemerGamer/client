@@ -376,7 +376,7 @@ func get_character(pid: int) -> Node:
 	return character
 
 
-func try_purchasing_item(item_name: String) -> void:
+func try_purchasing_item(item_name: String) -> bool:
 	# Before requesting it form the server try to purchase it locally.
 	# The checks can be quite expensive to do.
 	# Because of this we do them on the client side first and only relay
@@ -388,7 +388,7 @@ func try_purchasing_item(item_name: String) -> void:
 	var item = RegistryManager.items().get_element(item_name) as Item
 	if item == null:
 		print("Item (%s) not found in registry." % item_name)
-		return
+		return false
 
 	var purchase_result = item.try_purchase(character.item_list)
 	var total_cost = purchase_result["cost"]
@@ -400,7 +400,7 @@ func try_purchasing_item(item_name: String) -> void:
 				% [total_cost - character.current_gold, display_strings["name"]]
 			)
 		)
-		return
+		return false
 
 	var new_inventory = purchase_result["owned_items"] as Array[Item]
 	new_inventory.append(item)
@@ -413,16 +413,17 @@ func try_purchasing_item(item_name: String) -> void:
 	if active_items > character.active_item_slots:
 		var display_strings = item.get_desctiption_strings(character)
 		print(tr("ITEM:NOT_ENOUGH_ACTIVE_SLOTS") % display_strings["name"])
-		return
+		return false
 
 	var new_item_count = new_inventory.size() + 1
 	if new_item_count > character.passive_item_slots + character.active_item_slots:
 		var display_strings = item.get_desctiption_strings(character)
 		print(tr("ITEM:NOT_ENOUGH_SLOTS") % display_strings["name"])
-		return
+		return false
 
 	# If it is possible to actually purchase the item, request it from the server
 	server_listener.rpc_id(get_multiplayer_authority(), "try_purchase_item", item_name)
+	return true
 
 
 func _on_camera_setting_changed():

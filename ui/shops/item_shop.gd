@@ -1,37 +1,48 @@
 extends Control
 
-@onready var item_lists_container: BoxContainer = $ScrollContainer/ItemListsContainer
+const ui_sound_set: int = 2
 
 var player_instance: Node
 
-var hover_sound_player : AudioStreamPlayer
-var click_sound_player : AudioStreamPlayer
+var hover_sound_player: AudioStreamPlayer
+var buy_success_sound_player: AudioStreamPlayer
+var buy_reject_sound_player: AudioStreamPlayer
+
+@onready var item_lists_container: BoxContainer = $ScrollContainer/ItemListsContainer
 
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	var hover_sound := load("audio://openchamp:sfx/hover_button_1")
+	var hover_sound := load("audio://openchamp:sfx/ui_%d/button_hover" % ui_sound_set)
 	if not hover_sound:
 		print("error loading hover sound")
 		return
-	
+
 	hover_sound_player = AudioStreamPlayer.new()
 	hover_sound_player.name = "UIHoverSoundPlayer"
 	hover_sound_player.stream = hover_sound
 	hover_sound_player.bus = "MenuSfx"
-	
+
 	add_child(hover_sound_player)
-	
-	var click_sound := load("audio://openchamp:sfx/button_press_1")
-	
-	click_sound_player = AudioStreamPlayer.new()
-	click_sound_player.name = "UIClickSoundPlayer"
-	click_sound_player.stream = click_sound
-	click_sound_player.bus = "MenuSfx"
-	
-	add_child(click_sound_player)
-	
-	
+
+	var click_sound := load("audio://openchamp:sfx/ui_%d/button_press" % ui_sound_set)
+
+	buy_success_sound_player = AudioStreamPlayer.new()
+	buy_success_sound_player.name = "UIBuySuccessSoundPlayer"
+	buy_success_sound_player.stream = click_sound
+	buy_success_sound_player.bus = "MenuSfx"
+
+	add_child(buy_success_sound_player)
+
+	var reject_sound := load("audio://openchamp:sfx/ui_%d/button_reject" % ui_sound_set)
+
+	buy_reject_sound_player = AudioStreamPlayer.new()
+	buy_reject_sound_player.name = "UIBuyRejectSoundPlayer"
+	buy_reject_sound_player.stream = reject_sound
+	buy_reject_sound_player.bus = "MenuSfx"
+
+	add_child(buy_reject_sound_player)
+
 	var item_tiers: int = RegistryManager.items().highest_item_tier
 	print("Item tiers in shop: %d" % item_tiers)
 
@@ -111,16 +122,20 @@ func try_purchase_item(input_event, item_name: String) -> void:
 
 	if not input_event.is_pressed():
 		return
-	
-	click_sound_player.play()
+
+	hover_sound_player.stop()
 
 	var item = RegistryManager.items().get_element(item_name) as Item
 	if item == null:
 		print("Item (%s) not found in registry." % item_name)
+		buy_reject_sound_player.play()
 		return
 
 	print("Request purchase of item (%s) from server" % item_name)
-	player_instance.try_purchasing_item(item_name)
+	if player_instance.try_purchasing_item(item_name):
+		buy_success_sound_player.play()
+	else:
+		buy_reject_sound_player.play()
 
 
 func _input(event: InputEvent) -> void:
