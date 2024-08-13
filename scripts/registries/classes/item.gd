@@ -8,7 +8,7 @@ var is_active: bool = false
 var total_gold_cost: int = 0
 var component_tree: Dictionary = {}
 
-var stats = StatCollection.new()
+var stats := StatCollection.new()
 
 var effects: Array[ActionEffect] = []
 
@@ -17,7 +17,13 @@ var texture_id: Identifier
 
 
 func get_copy() -> Item:
-	var new_item = Item.new(id, texture_id, gold_cost, components, stats)
+	var new_item := Item.new(
+		id,
+		texture_id,
+		gold_cost,
+		components,
+		stats
+	)
 
 	new_item.item_tier = item_tier
 	new_item.total_gold_cost = total_gold_cost
@@ -38,7 +44,7 @@ func get_id() -> Identifier:
 
 
 func get_desctiption_strings(_caster: Unit = null) -> Dictionary:
-	var item_descriptions = {}
+	var item_descriptions : Dictionary = {}
 	item_descriptions["name"] = tr("ITEM:%s:NAME" % id.to_string())
 	item_descriptions["lore"] = tr("ITEM:%s:LORE" % id.to_string())
 	item_descriptions["cost"] = tr("ITEM:COST_LABEL") % calculate_gold_cost()
@@ -54,7 +60,7 @@ func get_desctiption_strings(_caster: Unit = null) -> Dictionary:
 
 	item_descriptions["stats"] = item_stat_string
 
-	var effect_string = ""
+	var effect_string : String = ""
 	for effect in effects:
 		effect_string += effect.get_description_string(_caster) + "\n"
 
@@ -110,9 +116,9 @@ func calculate_gold_cost() -> int:
 	if total_gold_cost > 0:
 		return total_gold_cost
 
-	var cost = gold_cost
+	var cost : int = gold_cost
 	for component in components:
-		var item = RegistryManager.items().get_element(component)
+		var item = RegistryManager.items().get_element(component) as Item
 		if item == null:
 			print("Item (%s): Component item not found." % component)
 			continue
@@ -128,7 +134,7 @@ func get_component_tree() -> Dictionary:
 		total_gold_cost = gold_cost
 
 		for component in components:
-			var item = RegistryManager.items().get_element(component)
+			var item = RegistryManager.items().get_element(component) as Item
 			if item == null:
 				print("Item (%s): Component item not found." % component)
 				continue
@@ -151,7 +157,7 @@ func try_purchase(owned_items: Array[Item]) -> Dictionary:
 	for item in owned_items:
 		shadow_inventory.append(item.get_copy())
 
-	var remaining_cost = gold_cost
+	var remaining_cost : int = gold_cost
 	for component in components:
 		var found = false
 		for shadow_item in shadow_inventory:
@@ -166,9 +172,9 @@ func try_purchase(owned_items: Array[Item]) -> Dictionary:
 				print("Item (%s): Component item not found." % component)
 				continue
 
-			var tried_purchase = item.try_purchase(shadow_inventory)
-			shadow_inventory = tried_purchase["owned_items"]
-			remaining_cost += tried_purchase["cost"]
+			var tried_purchase : Dictionary = item.try_purchase(shadow_inventory)
+			shadow_inventory = tried_purchase["owned_items"] as Array[Item]
+			remaining_cost += tried_purchase["cost"] as int
 
 	return {"cost": remaining_cost, "owned_items": shadow_inventory}
 
@@ -188,13 +194,13 @@ func is_valid(item_registry: RegistryBase = null) -> bool:
 	if gold_cost < 0:
 		return false
 
-	var highest_tier = -1
+	var highest_tier : int = -1
 	if components.size() > 0:
 		for component in components:
 			if not item_registry.contains(component):
 				return false
 
-			var comp_item = item_registry.get_element(component)
+			var comp_item := item_registry.get_element(component) as Item
 			if comp_item.item_tier < 0:
 				if not comp_item.is_valid(item_registry):
 					return false

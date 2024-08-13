@@ -16,6 +16,10 @@ config/features=PackedStringArray("4.3", "Forward Plus")
 boot_splash/image="res://default_assets/openchamp/textures/openchamp.png"
 config/icon="res://default_assets/openchamp/textures/openchamp.png"
 
+[audio]
+
+buses/default_bus_layout="res://scenes/audio_bus_layout.tres"
+
 [autoload]
 
 RegistryManager="*res://scripts/registries/registry_manager.gd"

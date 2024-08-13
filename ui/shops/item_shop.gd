@@ -4,9 +4,34 @@ extends Control
 
 var player_instance: Node
 
+var hover_sound_player : AudioStreamPlayer
+var click_sound_player : AudioStreamPlayer
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	var hover_sound := load("audio://openchamp:sfx/hover_button_1")
+	if not hover_sound:
+		print("error loading hover sound")
+		return
+	
+	hover_sound_player = AudioStreamPlayer.new()
+	hover_sound_player.name = "UIHoverSoundPlayer"
+	hover_sound_player.stream = hover_sound
+	hover_sound_player.bus = "MenuSfx"
+	
+	add_child(hover_sound_player)
+	
+	var click_sound := load("audio://openchamp:sfx/button_press_1")
+	
+	click_sound_player = AudioStreamPlayer.new()
+	click_sound_player.name = "UIClickSoundPlayer"
+	click_sound_player.stream = click_sound
+	click_sound_player.bus = "MenuSfx"
+	
+	add_child(click_sound_player)
+	
+	
 	var item_tiers: int = RegistryManager.items().highest_item_tier
 	print("Item tiers in shop: %d" % item_tiers)
 
@@ -44,13 +69,13 @@ func _ready() -> void:
 				)
 				continue
 
-			var item_image = TextureRect.new()
+			var item_image := TextureRect.new()
 			item_image.texture = item_texture
 			item_image.expand_mode = TextureRect.EXPAND_FIT_HEIGHT
 			item_image.stretch_mode = TextureRect.STRETCH_SCALE
 			item_image.tooltip_text = _item.get_tooltip_string()
 
-			var item_container = AspectRatioContainer.new()
+			var item_container := AspectRatioContainer.new()
 			item_container.size = Vector2(64, 64)
 			item_container.custom_minimum_size = Vector2(64, 64)
 			item_container.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -62,6 +87,7 @@ func _ready() -> void:
 			)
 
 			item_container.add_child(item_image)
+			item_container.mouse_entered.connect(func(): hover_sound_player.play())
 
 			_item_tier_box.add_child(item_container)
 
@@ -85,6 +111,8 @@ func try_purchase_item(input_event, item_name: String) -> void:
 
 	if not input_event.is_pressed():
 		return
+	
+	click_sound_player.play()
 
 	var item = RegistryManager.items().get_element(item_name) as Item
 	if item == null:
