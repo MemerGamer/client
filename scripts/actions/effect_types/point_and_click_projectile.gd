@@ -9,6 +9,8 @@ var model_scale := Vector3.ONE
 var model_rotation := Vector3.ZERO
 var spawn_offset := Vector3.ZERO
 
+var launch_sfx: String = ""
+
 
 func init_from_dict(_dict: Dictionary, _is_ability: bool = false) -> bool:
 	if not super(_dict):
@@ -41,6 +43,7 @@ func init_from_dict(_dict: Dictionary, _is_ability: bool = false) -> bool:
 		)
 		as Unit.DamageType
 	)
+	launch_sfx = JsonHelper.get_optional_string(raw_projectile_config, "launch_sfx", "")
 
 	return true
 
@@ -57,6 +60,7 @@ func get_copy(new_effect: ActionEffect = null) -> ActionEffect:
 	new_effect.model_rotation = model_rotation
 	new_effect.spawn_offset = spawn_offset
 	new_effect.damage_type = damage_type
+	new_effect.launch_sfx = launch_sfx
 
 	return new_effect
 
@@ -130,6 +134,8 @@ func _finish_channeling(caster: Unit, target) -> void:
 	projectile_config["model_scale"] = model_scale
 	projectile_config["model_rotation"] = model_rotation
 	projectile_config["spawn_offset"] = spawn_offset
+
+	projectile_config["launch_sfx"] = launch_sfx
 
 	caster.projectile_spawner.spawn(projectile_config)
 

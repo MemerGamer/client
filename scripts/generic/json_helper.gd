@@ -110,6 +110,23 @@ static func get_optional_int(dict: Dictionary, key_name: String, fallback_value 
 	return int(get_optional_number(dict, key_name, fallback_value))
 
 
+static func get_optional_string(dict: Dictionary, key_name: String, fallback_value = "") -> String:
+	if not dict.has(key_name):
+		return fallback_value
+
+	var value = dict[key_name]
+	if not (value is String):
+		print(
+			(
+				"%s is not a string but a %s;using the default value %s"
+				% [key_name, get_type_string(value), fallback_value]
+			)
+		)
+		return fallback_value
+
+	return value
+
+
 static func get_optional_enum(
 	dict: Dictionary, key_name: String, enum_type: Dictionary, fallback_value
 ) -> int:

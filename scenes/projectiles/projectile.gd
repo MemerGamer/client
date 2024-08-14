@@ -21,6 +21,9 @@ var model_rotation: Vector3 = Vector3(0.0, 0.0, 0.0)
 
 var on_hit_function: Callable
 
+var sfx_player := AudioStreamPlayer3D.new()
+var launch_sfx: String
+
 
 static func from_dict(projectile_config: Dictionary) -> Projectile:
 	if not projectile_config:
@@ -45,6 +48,7 @@ static func from_dict(projectile_config: Dictionary) -> Projectile:
 	new_projectile.model_rotation = projectile_config["model_rotation"]
 	new_projectile.speed = projectile_config["speed"]
 	new_projectile.damage_type = projectile_config["damage_type"]
+	new_projectile.launch_sfx = JsonHelper.get_optional_string(projectile_config, "launch_sfx", "")
 
 	new_projectile.damage_src = (
 		JsonHelper.get_optional_enum(
@@ -76,23 +80,23 @@ func _create_model():
 	add_child(model_node)
 
 	# Add multiplayer synchronization
-	var multiplayer_config = SceneReplicationConfig.new()
+	var multiplayer_config := SceneReplicationConfig.new()
 	multiplayer_config.add_property("../model_projectile:rotation")
 	multiplayer_config.add_property("../model_projectile:position")
 
-	var multiplayer_sync = MultiplayerSynchronizer.new()
+	var multiplayer_sync := MultiplayerSynchronizer.new()
 	multiplayer_sync.replication_config = multiplayer_config
 	multiplayer_sync.name = "multiplayer_sync"
 	model_node.add_child(multiplayer_sync)
 
 	# add the GPU trail
-	var trail_process_material = ShaderMaterial.new()
+	var trail_process_material := ShaderMaterial.new()
 	trail_process_material.shader = GPUTrailShader
 
-	var trail_curve = GPUTrailCurve
-	var trail_ramp = GPUTrailTexture
+	var trail_curve := GPUTrailCurve
+	var trail_ramp := GPUTrailTexture
 
-	var trail_draw_pass_1_material = ShaderMaterial.new()
+	var trail_draw_pass_1_material := ShaderMaterial.new()
 	trail_draw_pass_1_material.shader = GPUTrailDrawPassShader
 	trail_draw_pass_1_material.set_shader_parameter(
 		"emmission_transform",
@@ -104,13 +108,10 @@ func _create_model():
 	trail_draw_pass_1_material.set_shader_parameter("curve", trail_curve)
 	trail_draw_pass_1_material.set_shader_parameter("flags", 40)
 
-	var trail_draw_pass_1 = QuadMesh.new()
+	var trail_draw_pass_1 := QuadMesh.new()
 	trail_draw_pass_1.material = trail_draw_pass_1_material
 
-	var trail = GPUParticles3D.new()
-	trail.script = GPUTrailScript
-	trail = trail as GPUTrail3D
-
+	var trail := GPUTrail3D.new()
 	trail.set_defaults()
 
 	trail.name = "GPU_trail"
@@ -137,6 +138,17 @@ func _ready():
 
 	if not on_hit_function:
 		on_hit_function = _handle_auto_attack_hit
+
+	if not Config.is_dedicated_server and launch_sfx != "":
+		var launch_sound := load("audio://" + launch_sfx)
+		if not launch_sound:
+			print("error loading launch sound")
+			return
+		sfx_player.name = "ProjectileSFXPlayer"
+		sfx_player.bus = "EntitySfx"
+		sfx_player.stream = launch_sound
+		add_child(sfx_player)
+		sfx_player.play()
 
 	if not multiplayer.is_server():
 		return
