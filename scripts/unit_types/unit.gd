@@ -285,18 +285,9 @@ func _setup_scene_elements():
 
 	add_child(abilities_node)
 
-	# set up projectile spawning
-	var projectiles_node = Node.new()
-	projectiles_node.name = "Projectiles"
-	add_child(projectiles_node)
-
-	var projectile_spawner_node = MultiplayerSpawner.new()
-	projectile_spawner_node.name = "ProjectileSpawner"
-	projectile_spawner_node.spawn_limit = 999
-	projectile_spawner_node.spawn_path = NodePath("../Projectiles")
-	projectile_spawner_node.spawn_function = _spawn_projectile
-	add_child(projectile_spawner_node)
-	projectile_spawner = get_node("ProjectileSpawner")
+	projectile_spawner = ProjectileMultiplayerSpawner.new()
+	projectile_spawner.name = "ProjectileSpawner"
+	add_child(projectile_spawner)
 
 	# set up the action effects
 	var action_effects_node = Node.new()
@@ -369,37 +360,6 @@ func _setup_default_signals():
 
 	# Handle healing effects being applied
 	healed.connect(_healed_handler)
-
-
-func _spawn_projectile(_args):
-	var projectile_config = _args as Dictionary
-
-	if not projectile_config:
-		print("Projectile config not set.")
-		return null
-
-	var new_projectile = Projectile.new()
-
-	var spawn_offset = projectile_config["spawn_offset"] as Vector3
-	spawn_offset = spawn_offset.rotated(Vector3(0, 1, 0), rotation.y)
-
-	new_projectile.caster = self
-	new_projectile.position = server_position + spawn_offset
-	new_projectile.target = projectile_config["target_entity"]
-
-	new_projectile.model = projectile_config["model"]
-	new_projectile.model_scale = projectile_config["model_scale"]
-	new_projectile.model_rotation = projectile_config["model_rotation"]
-	new_projectile.speed = projectile_config["speed"]
-	new_projectile.damage_type = projectile_config["damage_type"]
-
-	new_projectile.damage_src = JsonHelper.get_optional_enum(
-		projectile_config, "source_type", SourceType, SourceType.BASIC_ATTACK
-	)
-
-	new_projectile.is_crit = _should_crit()
-
-	return new_projectile
 
 
 # Stats related things
@@ -621,7 +581,7 @@ func take_damage(
 		_die(caster)
 
 
-func _should_crit() -> bool:
+func should_crit() -> bool:
 	if current_stats.attack_crit_chance <= 0:
 		return false
 	if current_stats.attack_crit_chance >= 100:

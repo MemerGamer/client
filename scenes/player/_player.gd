@@ -366,7 +366,7 @@ func camera_movement_handler() -> void:
 
 func get_character(pid: int) -> Node:
 	if character == null:
-		var champs = $"../Characters".get_children()
+		var champs = $"../CharacterSpawner/Characters".get_children()
 		for child in champs:
 			if child.name == str(pid):
 				character = child

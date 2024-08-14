@@ -12,12 +12,9 @@ const PlayerDesktopHud = preload("res://ui/game_ui.tscn")
 const PlayerDesktopSettings = preload("res://ui/settings_menu/settings_menu.tscn")
 const PlayerItemShop = preload("res://ui/shops/item_shop.tscn")
 
-const DmgPopupScene = preload("res://scenes/effects/damage_popup.tscn")
-
 @export var map_configuration: Dictionary = {}
 
 @export var connected_players: Array
-@export var character_container: Node
 
 @export var map_features: Node
 @export var player_spawns = {}
@@ -31,6 +28,9 @@ var end_conditions = []
 var last_player_index = 0
 
 var player_passive_item_slots = 2
+
+var damage_popup_spawner := DamagePopupMultiplayerSpawner.new()
+var character_spawner := CharacterMultiplayerSpawner.new()
 
 
 func _ready():
@@ -71,74 +71,16 @@ func _physics_process(delta):
 
 
 func _setup_nodes():
-	character_container = Node.new()
-	character_container.name = "Characters"
-	add_child(character_container)
-	character_container = get_node("Characters")
-
-	var character_spawner = MultiplayerSpawner.new()
 	character_spawner.name = "CharacterSpawner"
-	character_spawner.spawn_path = NodePath("../Characters")
-	character_spawner.spawn_limit = 50
-	character_spawner.spawn_function = _spawn_character
-
+	character_spawner.map_death_func = on_player_death
 	add_child(character_spawner)
 
 	var abilities_node = Node.new()
 	abilities_node.name = "Abilities"
 	add_child(abilities_node)
 
-	var damage_popup_node = Node.new()
-	damage_popup_node.name = "DamagePopups"
-	add_child(damage_popup_node)
-
-	var damage_popup_spawner = MultiplayerSpawner.new()
 	damage_popup_spawner.name = "DamagePopupSpawner"
-	damage_popup_spawner.spawn_path = NodePath("../DamagePopups")
-	damage_popup_spawner.spawn_limit = 999
-	damage_popup_spawner.spawn_function = _spawn_damage_popup
 	add_child(damage_popup_spawner)
-
-
-func _spawn_character(args):
-	var spawn_args = args as Dictionary
-
-	if not spawn_args:
-		print("Error character spawn args could now be parsed as dict!")
-		return null
-
-	print("loading character:" + spawn_args["character"])
-
-	var char_data = RegistryManager.units().get_element(spawn_args["character"]) as UnitData
-	if not char_data:
-		print("Error character data could not be found in registry!")
-		return null
-
-	if not char_data.is_character:
-		print("Error character data is not a character!")
-		return null
-
-	var new_char = char_data.spawn(spawn_args)
-
-	if multiplayer.is_server():
-		new_char.died.connect(func(): on_player_death(spawn_args["id"]))
-
-	return new_char
-
-
-func _spawn_damage_popup(args):
-	var spawn_args = args as Dictionary
-
-	if not spawn_args:
-		print("Error damage popup spawn args could now be parsed as dict!")
-		return null
-
-	var new_popup = DmgPopupScene.instantiate()
-	new_popup.spawn_position = spawn_args["position"] as Vector3
-	new_popup.damage_value = int(spawn_args["value"])
-	new_popup.damage_type = spawn_args["type"]
-
-	return new_popup
 
 
 func _load_config():
@@ -215,7 +157,7 @@ func client_setup():
 
 func on_unit_damaged(unit: Unit, damage: int, damage_type: Unit.DamageType):
 	var damage_popup_args = {"position": unit.server_position, "value": damage, "type": damage_type}
-	$DamagePopupSpawner.spawn(damage_popup_args)
+	damage_popup_spawner.spawn(damage_popup_args)
 
 
 func on_player_death(player_id: int):

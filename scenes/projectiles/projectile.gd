@@ -12,14 +12,50 @@ var speed: float = 80.0
 var damage_type: Unit.DamageType = Unit.DamageType.PHYSICAL
 var damage_src: Unit.SourceType = Unit.SourceType.ITEM_EFFECT
 
-var target: Node = null
-var caster: Node = null
+var target: Unit
+var caster: Unit
 
 var model: String = "openchamp:particles/arrow"
 var model_scale: Vector3 = Vector3(1.0, 1.0, 1.0)
 var model_rotation: Vector3 = Vector3(0.0, 0.0, 0.0)
 
 var on_hit_function: Callable
+
+
+static func from_dict(projectile_config: Dictionary) -> Projectile:
+	if not projectile_config:
+		print("Projectile config not set.")
+		return null
+
+	var new_projectile = Projectile.new()
+
+	var caster_path := projectile_config["caster_entity_name"] as String
+	new_projectile.caster = Config.get_node(NodePath(caster_path)) as Unit
+
+	var target_entity_path := projectile_config["target_entity_name"] as String
+	new_projectile.target = Config.get_node(NodePath(target_entity_path)) as Unit
+
+	var spawn_offset = projectile_config["spawn_offset"] as Vector3
+	spawn_offset = spawn_offset.rotated(Vector3(0, 1, 0), new_projectile.caster.rotation.y)
+
+	new_projectile.position = new_projectile.caster.server_position + spawn_offset
+
+	new_projectile.model = projectile_config["model"]
+	new_projectile.model_scale = projectile_config["model_scale"]
+	new_projectile.model_rotation = projectile_config["model_rotation"]
+	new_projectile.speed = projectile_config["speed"]
+	new_projectile.damage_type = projectile_config["damage_type"]
+
+	new_projectile.damage_src = (
+		JsonHelper.get_optional_enum(
+			projectile_config, "source_type", Unit.PARSE_SOURCE_TYPE, Unit.DamageType.PHYSICAL
+		)
+		as Unit.SourceType
+	)
+
+	new_projectile.is_crit = new_projectile.caster.should_crit()
+
+	return new_projectile
 
 
 func _create_model():

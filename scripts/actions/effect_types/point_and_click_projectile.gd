@@ -1,7 +1,13 @@
 class_name PointAndClickProjectile
 extends ActiveActionEffect
 
-var projectile_config: Dictionary
+var speed: float = 20.0
+var damage_type := Unit.DamageType.PHYSICAL
+
+var model: String
+var model_scale := Vector3.ONE
+var model_rotation := Vector3.ZERO
+var spawn_offset := Vector3.ZERO
 
 
 func init_from_dict(_dict: Dictionary, _is_ability: bool = false) -> bool:
@@ -18,23 +24,23 @@ func init_from_dict(_dict: Dictionary, _is_ability: bool = false) -> bool:
 		print("Could not create PointAndClickProjectile. Projectile config is invalid.")
 		return false
 
-	var new_projectile_config = {}
-	new_projectile_config["model"] = str(raw_projectile_config["model"])
-	new_projectile_config["speed"] = float(raw_projectile_config["speed"])
-	new_projectile_config["model_scale"] = JsonHelper.get_vector3(
+	model = str(raw_projectile_config["model"])
+	speed = JsonHelper.get_optional_number(raw_projectile_config, "speed", 20.0)
+	model_scale = JsonHelper.get_vector3(
 		raw_projectile_config, "model_scale", Vector3(1.0, 1.0, 1.0)
 	)
-	new_projectile_config["model_rotation"] = JsonHelper.get_vector3(
+	model_rotation = JsonHelper.get_vector3(
 		raw_projectile_config, "model_rotation", Vector3(0.0, 0.0, 0.0)
 	)
-	new_projectile_config["spawn_offset"] = JsonHelper.get_vector3(
+	spawn_offset = JsonHelper.get_vector3(
 		raw_projectile_config, "spawn_offset", Vector3(0.0, 0.0, 0.0)
 	)
-	new_projectile_config["damage_type"] = JsonHelper.get_optional_enum(
-		raw_projectile_config, "damage_type", Unit.PARSE_DAMAGE_TYPE, Unit.DamageType.PHYSICAL
+	damage_type = (
+		JsonHelper.get_optional_enum(
+			raw_projectile_config, "damage_type", Unit.PARSE_DAMAGE_TYPE, damage_type
+		)
+		as Unit.DamageType
 	)
-
-	projectile_config = new_projectile_config
 
 	return true
 
@@ -45,7 +51,12 @@ func get_copy(new_effect: ActionEffect = null) -> ActionEffect:
 
 	new_effect = super(new_effect)
 
-	new_effect.projectile_config = JsonHelper.dict_deep_copy(projectile_config)
+	new_effect.model = model
+	new_effect.speed = speed
+	new_effect.model_scale = model_scale
+	new_effect.model_rotation = model_rotation
+	new_effect.spawn_offset = spawn_offset
+	new_effect.damage_type = damage_type
 
 	return new_effect
 
@@ -105,7 +116,20 @@ func _finish_channeling(caster: Unit, target) -> void:
 		print("Could not start active effect. Target is neutral.")
 		return
 
-	projectile_config["target_entity"] = target_unit
+	var projectile_config: Dictionary = {}
+
+	projectile_config["caster_entity_name"] = caster.get_path()
+	projectile_config["target_entity_name"] = target_unit.get_path()
+
+	projectile_config["speed"] = speed
+	projectile_config["damage_type"] = damage_type
+	projectile_config["damage"] = caster.current_stats.attack_damage
+
+	projectile_config["model"] = model
+	projectile_config["model_scale"] = model_scale
+	projectile_config["model_rotation"] = model_rotation
+	projectile_config["spawn_offset"] = spawn_offset
+
 	caster.projectile_spawner.spawn(projectile_config)
 
 	super(caster, target)
