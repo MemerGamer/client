@@ -156,7 +156,7 @@ var item_slots_passive: Array[Item] = []
 
 var items_changed: bool = false
 
-var abilities: Array[Ability] = []
+var abilities: Dictionary = {}
 
 # Each bit of cc_state represents a different type of crowd control.
 var cc_state: int = 0
@@ -280,7 +280,9 @@ func _setup_scene_elements():
 	var abilities_node = Node.new()
 	abilities_node.name = "Abilities"
 
-	for ability in abilities:
+	for key in abilities.keys():
+		var ability = abilities[key]
+		ability._connected_unit = self
 		abilities_node.add_child(ability)
 
 	add_child(abilities_node)

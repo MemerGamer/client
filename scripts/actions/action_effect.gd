@@ -215,8 +215,6 @@ func get_copy(new_effect: ActionEffect = null) -> ActionEffect:
 	new_effect._ability_type = _ability_type
 	new_effect._activation_state = _activation_state
 
-	new_effect._ability_type = _ability_type
-
 	new_effect._is_loaded = _is_loaded
 	new_effect._display_id = _display_id
 

@@ -281,7 +281,7 @@ func spawn(spawn_args: Dictionary):
 	for ability_key in ability_keys:
 		var new_ability = abilities[ability_key].get_copy()
 		new_ability.name = ability_key
-		new_unit.abilities.append(new_ability)
+		new_unit.abilities[ability_key] = new_ability
 
 	# check if the unit should be spawned as a character
 	# if no value is provided use the one in the unit data

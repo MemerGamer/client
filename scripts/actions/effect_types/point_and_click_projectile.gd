@@ -124,6 +124,7 @@ func _finish_channeling(caster: Unit, target) -> void:
 	projectile_config["speed"] = speed
 	projectile_config["damage_type"] = damage_type
 	projectile_config["damage"] = caster.current_stats.attack_damage
+	projectile_config["source_type"] = _effect_source
 
 	projectile_config["model"] = model
 	projectile_config["model_scale"] = model_scale

@@ -10,7 +10,7 @@ var scaling_calc = null
 var scaling_display = null
 
 var damage_type: Unit.DamageType = Unit.DamageType.PHYSICAL
-var trigger_sources: Array[Unit.SourceType] = [
+var trigger_sources: Array = [
 	Unit.SourceType.BASIC_ATTACK,
 ]
 
@@ -59,6 +59,10 @@ func get_copy(new_effect: ActionEffect = null) -> ActionEffect:
 	new_effect.damage_type = damage_type
 	new_effect.can_crit = can_crit
 
+	new_effect.trigger_sources = []
+	for source in trigger_sources:
+		new_effect.trigger_sources.append(source)
+
 	return new_effect
 
 
@@ -97,24 +101,24 @@ func disconnect_from_unit(_unit: Unit) -> void:
 
 
 func _on_attack_connected_fixed(
-	caster: Unit, target: Unit, is_crit: bool, _damage_type, _damage_src
+	caster: Unit, target: Unit, is_crit: bool, _damage_type, _damage_src: Unit.SourceType
 ) -> void:
 	if not target.is_alive:
 		return
 
-	if _damage_src not in trigger_sources:
+	if not trigger_sources.has(_damage_src):
 		return
 
 	target.take_damage(caster, can_crit and is_crit, damage_type, damage, _effect_source)
 
 
 func _on_attack_connected_scaled(
-	caster: Unit, target: Unit, is_crit: bool, _damage_type, _damage_src
+	caster: Unit, target: Unit, is_crit: bool, _damage_type, _damage_src: Unit.SourceType
 ) -> void:
 	if not target.is_alive:
 		return
 
-	if _damage_src not in trigger_sources:
+	if not trigger_sources.has(_damage_src):
 		return
 
 	var raw_damage = int(scaling_calc.call(caster, target))

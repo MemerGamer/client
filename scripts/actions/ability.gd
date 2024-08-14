@@ -78,18 +78,22 @@ static func from_dict(_dict: Dictionary) -> Ability:
 
 func get_copy() -> Ability:
 	var new_ability := Ability.new()
+
 	new_ability._display_id = _display_id
 	new_ability._texture_id = _texture_id
 	new_ability._can_levelup = _can_levelup
 	new_ability._level = _level
+
 	for _ability_level in _ability_levels:
 		var new_ability_level = _ability_level.get_copy()
 		new_ability_level.name = _ability_level.name
 		new_ability._ability_levels.append(new_ability_level)
 
 	if _current_effect != null:
-		var ability_index := _ability_levels.find(_current_effect)
-		new_ability._current_effect = new_ability._ability_levels[ability_index]
+		for ability in new_ability._ability_levels:
+			if ability.name == _current_effect.name:
+				new_ability._current_effect = ability
+				break
 
 	return new_ability
 
