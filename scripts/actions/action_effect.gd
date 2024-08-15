@@ -125,24 +125,6 @@ static func from_dict(_dict: Dictionary, is_ability: bool = false) -> ActionEffe
 			print("Invalid action effect class name: " + _dict["base_id"])
 			return null
 
-	if not _dict.has("display_id"):
-		print("Could not create action effect from dictionary. Dictionary has no display_id key.")
-		return null
-
-	effect_instance._display_id = Identifier.from_string(str(_dict["display_id"]))
-	effect_instance._is_exclusive = JsonHelper.get_optional_bool(_dict, "is_exclusive", false)
-
-	var fallback_source = Unit.SourceType.ITEM_EFFECT
-	if is_ability:
-		fallback_source = Unit.SourceType.ABILITY_SINGLE
-
-	effect_instance._effect_source = (
-		JsonHelper.get_optional_enum(
-			_dict, "effect_source", Unit.PARSE_SOURCE_TYPE, fallback_source
-		)
-		as Unit.SourceType
-	)
-
 	if not effect_instance.init_from_dict(_dict, is_ability):
 		print("Could not create action effect from dictionary. Could not load data.")
 		return null
@@ -205,7 +187,25 @@ func get_description_string(_caster: Unit) -> String:
 ## specific action effect subclass.
 ## The return value should be true if the loading was successful
 func init_from_dict(_dict: Dictionary, _is_ability: bool = false) -> bool:
-	return false
+	if not _dict.has("display_id"):
+		print("Could not create action effect from dictionary. Dictionary has no display_id key.")
+		return false
+
+	_display_id = Identifier.from_string(str(_dict["display_id"]))
+	_is_exclusive = JsonHelper.get_optional_bool(_dict, "is_exclusive", false)
+
+	var fallback_source = Unit.SourceType.ITEM_EFFECT
+	if _is_ability:
+		fallback_source = Unit.SourceType.ABILITY_SINGLE
+
+	_effect_source = (
+		JsonHelper.get_optional_enum(
+			_dict, "effect_source", Unit.PARSE_SOURCE_TYPE, fallback_source
+		)
+		as Unit.SourceType
+	)
+
+	return true
 
 
 func get_copy(new_effect: ActionEffect = null) -> ActionEffect:

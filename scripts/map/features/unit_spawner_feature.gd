@@ -18,6 +18,7 @@ var require_clear: bool = false
 
 # current spawner values
 var current_wave: int = 0
+var current_unit_count: int = 0
 
 var spawned_units: Node
 var spawn_timer: Timer
@@ -45,7 +46,7 @@ func spawn(feature_data: Dictionary, parent: Node) -> bool:
 		print("Spawn is missing spawn_behaviour")
 		return false
 
-	var spawn_behaviour: Dictionary = feature_data["spawn_behaviour"]
+	var spawn_behaviour := feature_data["spawn_behaviour"] as Dictionary
 
 	if not spawn_behaviour.has("unit_type"):
 		print("Spawn is missing unit_type")
@@ -57,41 +58,34 @@ func spawn(feature_data: Dictionary, parent: Node) -> bool:
 		print("Failed to get unit type")
 		return false
 
-	if spawn_behaviour.has("unit_level"):
-		unit_level = int(spawn_behaviour["unit_level"])
+	unit_level = JsonHelper.get_optional_int(spawn_behaviour, "unit_level", unit_level)
+	unit_level_growth = JsonHelper.get_optional_int(
+		spawn_behaviour, "unit_level_growth", unit_level_growth
+	)
 
-	if spawn_behaviour.has("unit_level_growth"):
-		unit_level_growth = int(spawn_behaviour["unit_level_growth"])
+	unit_level_growth_time = JsonHelper.get_optional_number(
+		spawn_behaviour, "unit_level_growth_time", unit_level_growth_time
+	)
+	initial_cooldown = JsonHelper.get_optional_number(
+		spawn_behaviour, "initial_cooldown", initial_cooldown
+	)
+	wave_interval = JsonHelper.get_optional_number(spawn_behaviour, "wave_interval", wave_interval)
 
-	if spawn_behaviour.has("unit_level_growth_time"):
-		unit_level_growth_time = float(spawn_behaviour["unit_level_growth_time"])
+	wave_size = JsonHelper.get_optional_int(spawn_behaviour, "wave_size", wave_size)
+	wave_growth = JsonHelper.get_optional_int(spawn_behaviour, "wave_growth", wave_growth)
 
-	if spawn_behaviour.has("initial_cooldown"):
-		initial_cooldown = float(spawn_behaviour["initial_cooldown"])
-
-	if spawn_behaviour.has("wave_interval"):
-		wave_interval = float(spawn_behaviour["wave_interval"])
-
-	if spawn_behaviour.has("wave_size"):
-		wave_size = int(spawn_behaviour["wave_size"])
-
-	if spawn_behaviour.has("wave_growth"):
-		wave_growth = int(spawn_behaviour["wave_growth"])
-
-	if spawn_behaviour.has("require_clear"):
-		require_clear = bool(spawn_behaviour["require_clear"])
+	require_clear = JsonHelper.get_optional_bool(spawn_behaviour, "require_clear", require_clear)
 
 	position = _get_position(name, parent, feature_data)
 	if position == null:
 		print("Failed to get position")
 		return false
 
-	parent.player_spawns[str(team)] = self
+	#parent.player_spawns[str(team)] = self
 
 	spawned_units = Node.new()
 	spawned_units.name = "SpawnedUnits"
 	add_child(spawned_units)
-	spawned_units = get_node("SpawnedUnits")
 
 	unit_multiplayer_spawner = MultiplayerSpawner.new()
 	unit_multiplayer_spawner.name = "UnitMultiplayerSpawner"
@@ -107,7 +101,6 @@ func spawn(feature_data: Dictionary, parent: Node) -> bool:
 	spawn_timer.autostart = true
 	spawn_timer.timeout.connect(_spawn_wave)
 	add_child(spawn_timer)
-	spawn_timer = get_node("SpawnTimer")
 
 	return true
 
@@ -124,14 +117,26 @@ func _get_wave_size(wave_number: int, _game_time: float) -> int:
 	return wave_size + (wave_growth * wave_number)
 
 
-func _on_unit_death(unit: Unit):
+func _on_unit_death(unit_name: String):
+	var unit: Unit = null
+	for _unit in spawned_units.get_children():
+		if _unit.name == unit_name:
+			unit = _unit as Unit
+			break
+
+	if not unit:
+		print("Failed to get unit: " + unit_name)
+		return
+
 	spawned_units.remove_child(unit)
 	unit.queue_free()
+
+	current_unit_count -= 1
 
 	if not require_clear:
 		return
 
-	if spawned_units.get_child_count() == 0:
+	if current_unit_count == 0:
 		var next_cd = _get_wave_cooldown()
 		print("Next wave in " + str(next_cd) + " seconds")
 		spawn_timer.wait_time = next_cd
@@ -139,15 +144,15 @@ func _on_unit_death(unit: Unit):
 
 
 func _spawn_wave():
-	var spawn_time = map.time_elapsed
+	var spawn_time: float = map.time_elapsed
 
-	var next_wave_size = _get_wave_size(current_wave, spawn_time)
+	var next_wave_size := _get_wave_size(current_wave, spawn_time)
 	print("Spawning wave of " + str(next_wave_size) + " units")
 
 	for i in range(next_wave_size):
 		var spawn_args = {
 			"unitType": unit_type,
-			"name": name + "_wave_" + str(current_wave) + "_unit_" + str(current_wave),
+			"name": name + "_wave_" + str(current_wave) + "_unit_" + str(i),
 			"team": team,
 			"index": i,
 			"position": position,
@@ -161,7 +166,7 @@ func _spawn_wave():
 	current_wave += 1
 
 	if not require_clear:
-		var next_cd = _get_wave_cooldown()
+		var next_cd := _get_wave_cooldown()
 		print("Next wave in " + str(next_cd) + " seconds")
 		spawn_timer.wait_time = next_cd
 		spawn_timer.start()
@@ -181,12 +186,18 @@ func _multiplayer_spawn_unit(data: Dictionary):
 		print("Failed to get unit data")
 		return
 
-	var new_unit = new_unit_data.spawn(data)
-	new_unit.died.connect(_on_unit_death.bind(new_unit))
+	var unit_name := data["name"] as String
+	var new_unit := new_unit_data.spawn(data) as Unit
+	if not new_unit:
+		print("Something went wrong spawning unit: " + unit_name)
+		return null
+
+	new_unit.died.connect(_on_unit_death.bind(unit_name))
 
 	if map == null:
 		print("Map is null not setting it in spawner")
 		return new_unit
 
 	new_unit.map = map
+	current_unit_count += 1
 	return new_unit

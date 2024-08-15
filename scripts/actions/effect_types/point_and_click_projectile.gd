@@ -13,7 +13,7 @@ var launch_sfx: String = ""
 
 
 func init_from_dict(_dict: Dictionary, _is_ability: bool = false) -> bool:
-	if not super(_dict):
+	if not super(_dict, _is_ability):
 		print("Could not create PointAndClickProjectile base class.")
 		return false
 
@@ -102,22 +102,23 @@ func _start_channeling(caster: Unit, target) -> bool:
 	return super(caster, target)
 
 
-func _finish_channeling(caster: Unit, target) -> void:
-	var target_unit = target as Unit
+func _finish_channeling(caster_path: NodePath, target_path: NodePath) -> void:
+	var target_unit := get_node(target_path) as Unit
 	if not target_unit:
-		print("Could not start active effect. Target is not a unit.")
+		_activation_state = ActivationState.READY
+		print("Could not start active effect. Target is not a unit or not longer exists.")
 		return
 
+	var caster := get_node(caster_path) as Unit
 	if not caster:
 		print("Could not start active effect. Caster is null.")
 		return
 
-	if caster.team == target_unit.team:
-		print("Could not start active effect. Caster and target are in the same team.")
-		return
-
-	if target_unit.team == 0:
-		print("Could not start active effect. Target is neutral.")
+	if caster.team == target_unit.team or target_unit.team == 0:
+		_activation_state = ActivationState.READY
+		print(
+			"Could not start active effect. Caster and target are in the same team or the team is neutral."
+		)
 		return
 
 	var projectile_config: Dictionary = {}
@@ -139,4 +140,4 @@ func _finish_channeling(caster: Unit, target) -> void:
 
 	caster.projectile_spawner.spawn(projectile_config)
 
-	super(caster, target)
+	super(caster_path, target_path)

@@ -12,14 +12,15 @@ var channel_time: float = 0.0
 var active_time: float = 0.0
 var cooldown_time: float = 0.0
 
-var channeling_timer := Timer.new()
-var active_timer := Timer.new()
 var cooldown_timer := Timer.new()
 
 var _current_haste: float = 0.0
 
 
 func init_from_dict(_dict: Dictionary, _is_ability: bool = false) -> bool:
+	if not super(_dict, _is_ability):
+		return false
+
 	attack_speed_scaled = JsonHelper.get_optional_bool(_dict, "as_scaled", false)
 	windup_ratio = JsonHelper.get_optional_number(_dict, "windup_ratio", 0.0)
 
@@ -105,22 +106,28 @@ func _finish_targeting(caster: Unit, target) -> bool:
 func _start_channeling(caster: Unit, target) -> bool:
 	_activation_state = ActivationState.CHANNELING
 
+	var final_channel_time: float = channel_time
+
 	if attack_speed_scaled:
 		var attack_time = float(100.0 / caster.current_stats.attack_speed)
-		channeling_timer.set_wait_time(attack_time * windup_ratio)
 		cooldown_timer.set_wait_time(attack_time * (1.0 - windup_ratio))
 
-	channeling_timer.timeout.connect(func(): _finish_channeling(caster, target))
-	channeling_timer.start()
+		channel_time = attack_time * windup_ratio
+
+	get_tree().create_timer(final_channel_time).timeout.connect(
+		_finish_channeling.bind(caster.get_path(), target.get_path())
+	)
+
 	return true
 
 
-func _finish_channeling(caster: Unit, target) -> void:
-	var target_unit = target as Unit
+func _finish_channeling(caster_path: NodePath, target_path: NodePath) -> void:
+	var caster_unit = get_node(caster_path) as Unit
+	var target_unit = get_node(target_path) as Unit
 	if target_unit:
-		caster.targeted_cast_finished.emit(caster, target_unit, _effect_source)
+		caster_unit.targeted_cast_finished.emit(caster_unit, target_unit, _effect_source)
 
-	_start_active(caster, target)
+	_start_active(caster_unit, target_unit)
 
 
 func _start_active(caster: Unit, _target) -> void:
@@ -129,8 +136,8 @@ func _start_active(caster: Unit, _target) -> void:
 		return
 
 	_activation_state = ActivationState.ACTIVE
-	active_timer.timeout.connect(func(): _finish_active(caster, _target))
-	active_timer.start()
+
+	get_tree().create_timer(active_time).timeout.connect(_finish_active.bind(caster, _target))
 
 
 func _finish_active(caster: Unit, _target) -> void:
@@ -171,15 +178,3 @@ func _ready() -> void:
 	cooldown_timer.set_one_shot(true)
 	cooldown_timer.timeout.connect(_on_cooldown_finished)
 	add_child(cooldown_timer)
-
-	if active_time > 0.0:
-		active_timer.set_wait_time(active_time)
-	active_timer.name = "Active Timer"
-	active_timer.set_one_shot(true)
-	add_child(active_timer)
-
-	if channel_time > 0.0:
-		channeling_timer.set_wait_time(channel_time)
-	channeling_timer.name = "Channeling Timer"
-	channeling_timer.set_one_shot(true)
-	add_child(channeling_timer)

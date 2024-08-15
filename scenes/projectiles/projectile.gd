@@ -140,12 +140,12 @@ func _ready():
 		var launch_sound := load("audio://" + launch_sfx)
 		if not launch_sound:
 			print("error loading launch sound")
-			return
-		sfx_player.name = "ProjectileSFXPlayer"
-		sfx_player.bus = "EntitySfx"
-		sfx_player.stream = launch_sound
-		add_child(sfx_player)
-		sfx_player.play()
+		else:
+			sfx_player.name = "ProjectileSFXPlayer"
+			sfx_player.bus = "EntitySfx"
+			sfx_player.stream = launch_sound
+			add_child(sfx_player)
+			sfx_player.play()
 
 	if not multiplayer.is_server():
 		return

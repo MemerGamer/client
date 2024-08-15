@@ -18,6 +18,10 @@ var can_crit: bool = false
 
 
 func init_from_dict(_dict: Dictionary, _is_ability: bool = false) -> bool:
+	if not super(_dict, _is_ability):
+		print("Could not create OnHitDamageEffect base class.")
+		return false
+
 	if not _dict.has("damage") and not _dict.has("scaling"):
 		print(
 			"Could not create OnHitDamageEffect from dictionary. Dictionary is missing required keys."
@@ -103,10 +107,7 @@ func disconnect_from_unit(_unit: Unit) -> void:
 func _on_attack_connected_fixed(
 	caster: Unit, target: Unit, is_crit: bool, _damage_type, _damage_src: Unit.SourceType
 ) -> void:
-	if not target.is_alive:
-		return
-
-	if not trigger_sources.has(_damage_src):
+	if not _can_trigger_onhit(caster, target, is_crit, _damage_type, _damage_src):
 		return
 
 	target.take_damage(caster, can_crit and is_crit, damage_type, damage, _effect_source)
@@ -115,12 +116,27 @@ func _on_attack_connected_fixed(
 func _on_attack_connected_scaled(
 	caster: Unit, target: Unit, is_crit: bool, _damage_type, _damage_src: Unit.SourceType
 ) -> void:
-	if not target.is_alive:
+	if not _can_trigger_onhit(caster, target, is_crit, _damage_type, _damage_src):
 		return
 
-	if not trigger_sources.has(_damage_src):
-		return
-
-	var raw_damage = int(scaling_calc.call(caster, target))
+	var raw_damage := int(scaling_calc.call(caster, target))
 
 	target.take_damage(caster, can_crit and is_crit, damage_type, raw_damage, _effect_source)
+
+
+func _can_trigger_onhit(
+	caster: Unit, target: Unit, is_crit: bool, _damage_type, _damage_src: Unit.SourceType
+) -> bool:
+	if not caster:
+		return false
+
+	if not target:
+		return false
+
+	if not target.is_alive:
+		return false
+
+	if not trigger_sources.has(_damage_src):
+		return false
+
+	return true

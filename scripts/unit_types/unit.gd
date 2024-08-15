@@ -526,6 +526,9 @@ func update_target_location(target_location: Vector3):
 func take_damage(
 	caster: Unit, is_crit: bool, damage_type: DamageType, damage_amount: int, src: SourceType
 ):
+	if not multiplayer.is_server():
+		return
+
 	if not can_take_damage():
 		return
 
@@ -551,8 +554,7 @@ func take_damage(
 		effective_resistance = max(0.0, effective_resistance / 100.0) + 1.0
 
 	# calculate the remaining damage after resistance
-	remaning_damage /= effective_resistance
-	var actual_damage = int(remaning_damage)
+	var actual_damage = int(remaning_damage / effective_resistance)
 
 	# handle shielding
 	if current_shielding > 0:
@@ -574,8 +576,8 @@ func take_damage(
 			# This spawns the damage popup on all clients
 			map.on_unit_damaged(self, actual_damage, damage_type)
 
-	# This simply updates all UI elements with the latest stats
-	current_stats_changed.emit(old_stats, current_stats)
+		# This simply updates all UI elements with the latest stats
+		current_stats_changed.emit(old_stats, current_stats)
 
 	# If the health is 0 or less, the unit dies and we register the caster as the murderer.
 	if current_stats.health <= 0:
