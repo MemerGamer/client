@@ -69,16 +69,14 @@ func _input(event):
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			player_mouse_action(event, true, true)
 			is_right_mouse_dragging = false
+			_show_ability_indicator("basic_attack")
 
 		# Right click to move
 		if event.button_index == MOUSE_BUTTON_RIGHT:
 			# Start dragging
 			player_mouse_action(event, not is_right_mouse_dragging)  # For single clicks
 
-			if event.is_pressed and not is_right_mouse_dragging:
-				is_right_mouse_dragging = true
-			else:
-				is_right_mouse_dragging = false
+			is_right_mouse_dragging = event.is_pressed()
 
 		# if event.button_index == MOUSE_BUTTON_MIDDLE:
 		# 	if event.pressed:
@@ -88,9 +86,11 @@ func _input(event):
 		# 		is_middle_mouse_dragging = false
 
 		# Stop dragging if mouse is released
-		if not event.is_pressed:
+		if not event.is_pressed():
 			is_middle_mouse_dragging = false
 			is_right_mouse_dragging = false
+
+			_hide_ability_inidicator("basic_attack")
 
 		return
 
@@ -145,17 +145,12 @@ func _player_action_attack(collider):
 		return
 
 	var target_path = str(colliding_unit.get_path())
-	server_listener.rpc_id(get_multiplayer_authority(), "target", target_path)
+	server_listener.rpc_id(get_multiplayer_authority(), "basic_attack", target_path)
 
 	_play_move_marker(colliding_unit.global_position, true)
 
 
 func _player_action_attack_near(center: Vector3, target_mode = null) -> bool:
-	# make the attack range visable for a bit
-	if not Config.show_all_attack_ranges:
-		character.attack_range_visualizer.show()
-		get_tree().create_timer(0.2).connect("timeout", character.attack_range_visualizer.hide)
-
 	var targeted_unit = target_mode as Unit
 	if targeted_unit:
 		print("Attacking " + targeted_unit.name)
@@ -222,6 +217,26 @@ func _player_action_attack_near(center: Vector3, target_mode = null) -> bool:
 	_player_action_attack(closest_unit)
 
 	return true
+
+
+func _show_ability_indicator(ability_name: String):
+	# make the attack range visable for a bit
+	if not Config.show_all_attack_ranges:
+		var attack_ability := character.get_node("Abilities/" + ability_name) as Ability
+		if attack_ability:
+			var attack_effect = attack_ability._current_effect as ActiveActionEffect
+			if attack_effect:
+				attack_effect.start_preview_cast(character)
+
+
+func _hide_ability_inidicator(ability_name: String):
+	# make the attack range visable for a bit
+	if not Config.show_all_attack_ranges:
+		var attack_ability := character.get_node("Abilities/" + ability_name) as Ability
+		if attack_ability:
+			var attack_effect = attack_ability._current_effect as ActiveActionEffect
+			if attack_effect:
+				attack_effect.stop_preview_cast(character)
 
 
 func _player_action_move(target_pos: Vector3, update_marker: bool = false):

@@ -11,6 +11,8 @@ var spawn_offset := Vector3.ZERO
 
 var launch_sfx: String = ""
 
+var attack_range_visualizer: MeshInstance3D
+
 
 func init_from_dict(_dict: Dictionary, _is_ability: bool = false) -> bool:
 	if not super(_dict, _is_ability):
@@ -65,15 +67,20 @@ func get_copy(new_effect: ActionEffect = null) -> ActionEffect:
 	return new_effect
 
 
-# TODO: Implement range visualization
+func start_preview_cast(caster: Unit) -> void:
+	if use_attack_range:
+		casting_range = caster.current_stats.attack_range
 
+	attack_range_visualizer.mesh.inner_radius = casting_range * 0.0099
+	attack_range_visualizer.mesh.outer_radius = casting_range * 0.01
 
-func start_preview_cast(_caster: Unit) -> void:
-	print("Not implemented. Needs to be implemented in the subclass.")
+	attack_range_visualizer.global_position = caster.global_position
+
+	attack_range_visualizer.show()
 
 
 func stop_preview_cast(_caster: Unit) -> void:
-	print("Not implemented. Needs to be implemented in the subclass.")
+	attack_range_visualizer.hide()
 
 
 func _start_channeling(caster: Unit, target) -> bool:
@@ -141,3 +148,28 @@ func _finish_channeling(caster_path: NodePath, target_path: NodePath) -> void:
 	caster.projectile_spawner.spawn(projectile_config)
 
 	super(caster_path, target_path)
+
+
+func _ready() -> void:
+	# set up the attack range visualizer
+	var attack_range_mesh = TorusMesh.new()
+
+	var inner_radius = casting_range * 0.01
+	attack_range_mesh.inner_radius = inner_radius
+	attack_range_mesh.outer_radius = inner_radius + 0.01
+
+	attack_range_visualizer = MeshInstance3D.new()
+	attack_range_visualizer.name = "AttackRangeVisualizer"
+	attack_range_visualizer.mesh = attack_range_mesh
+	attack_range_visualizer.transparency = 0.8
+	attack_range_visualizer.cast_shadow = (
+		GeometryInstance3D.ShadowCastingSetting.SHADOW_CASTING_SETTING_OFF
+	)
+
+	add_child(attack_range_visualizer)
+	attack_range_visualizer = get_node("AttackRangeVisualizer")
+
+	if not Config.show_all_attack_ranges:
+		attack_range_visualizer.hide()
+
+	super()

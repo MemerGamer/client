@@ -105,13 +105,13 @@ const DEFAULT_BASE_STATS: Dictionary = {
 }
 
 # constant unit variables
-@export var id: int
-@export var team: int
-@export var index: int = 0
-@export var nametag: String
-@export var player_controlled: bool = false
-@export var is_structure: bool = false
-@export var unit_id: String = ""
+var id: int
+var team: int
+var index: int = 0
+var nametag: String
+var player_controlled: bool = false
+var is_structure: bool = false
+var unit_id: String = ""
 
 # Stats:
 var current_stats: StatCollection
@@ -169,8 +169,6 @@ var nav_agent: NavigationAgent3D
 
 var map: Node = null
 var projectile_spawner: MultiplayerSpawner
-
-var attack_range_visualizer: MeshInstance3D
 
 var action_effects: Node
 
@@ -312,25 +310,6 @@ func _setup_scene_elements():
 		func(_old_stats, _new_stats): healthbar_node.update_healthbar(self)
 	)
 
-	# set up the attack range visualizer
-	var attack_range_mesh = TorusMesh.new()
-	attack_range_mesh.inner_radius = current_stats.attack_range * 0.0099
-	attack_range_mesh.outer_radius = current_stats.attack_range * 0.01
-
-	attack_range_visualizer = MeshInstance3D.new()
-	attack_range_visualizer.name = "AttackRangeVisualizer"
-	attack_range_visualizer.mesh = attack_range_mesh
-	attack_range_visualizer.transparency = 0.8
-	attack_range_visualizer.cast_shadow = (
-		GeometryInstance3D.ShadowCastingSetting.SHADOW_CASTING_SETTING_OFF
-	)
-
-	add_child(attack_range_visualizer)
-	attack_range_visualizer = get_node("AttackRangeVisualizer")
-
-	if not Config.show_all_attack_ranges:
-		attack_range_visualizer.hide()
-
 	# set up the timer for passive healing and mana regen
 	var passive_heal_timer := Timer.new()
 	passive_heal_timer.name = "PassiveHealTimer"
@@ -351,9 +330,6 @@ func _setup_scene_elements():
 
 
 func _setup_default_signals():
-	# update the attack range visualizer when the stats change
-	current_stats_changed.connect(_update_range_visualizer)
-
 	# Deal the damage when the attack hits
 	attack_connected.connect(_attack_connected)
 
@@ -694,11 +670,6 @@ func can_change_target() -> bool:
 
 func can_take_damage() -> bool:
 	return cc_state & CCTypesRegistry.CC_MASK_TAKE_DAMAGE == 0
-
-
-func _update_range_visualizer(_old_stats: StatCollection, _new_stats: StatCollection):
-	attack_range_visualizer.mesh.inner_radius = current_stats.attack_range * 0.0099
-	attack_range_visualizer.mesh.outer_radius = current_stats.attack_range * 0.01
 
 
 func _passive_regen_handler():

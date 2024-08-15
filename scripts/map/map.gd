@@ -264,7 +264,7 @@ func move_to(pos: Vector3):
 
 
 @rpc("any_peer", "call_local")
-func target(target_path):
+func basic_attack(target_path):
 	var character = get_character(multiplayer.get_remote_sender_id())
 
 	var target_unit = get_node(target_path) as Unit
