@@ -27,7 +27,7 @@ func _spawn_character(args):
 	var new_char = char_data.spawn(spawn_args)
 
 	if multiplayer.is_server():
-		new_char.died.connect(func(): map_death_func.call(spawn_args["id"]))
+		new_char.died.connect(map_death_func.bind(spawn_args["id"]))
 
 	return new_char
 

@@ -136,9 +136,6 @@ func _create_model():
 func _ready():
 	_create_model()
 
-	if not on_hit_function:
-		on_hit_function = _handle_auto_attack_hit
-
 	if not Config.is_dedicated_server and launch_sfx != "":
 		var launch_sound := load("audio://" + launch_sfx)
 		if not launch_sound:
@@ -184,7 +181,11 @@ func _process(delta):
 
 	# If the projectile has hit, deal damage and destroy the projectile
 	if has_hit:
-		on_hit_function.call(caster, target, is_crit, damage_type)
+		if on_hit_function:
+			on_hit_function.call(caster, target, is_crit, damage_type)
+		else:
+			_handle_auto_attack_hit(caster, target, is_crit, damage_type)
+
 		queue_free()
 		return
 
@@ -193,7 +194,7 @@ func _process(delta):
 	print(global_position)
 	print(global_position.distance_to(target_pos))
 
-	var dir = (target_head - global_position).normalized()
+	var dir = global_position.direction_to(target_head)
 	global_position += dir * step_distance
 	look_at(target_head)
 

@@ -155,7 +155,7 @@ func _spawn_wave():
 		}
 
 		get_tree().create_timer(i * 0.5).timeout.connect(
-			func(): unit_multiplayer_spawner.spawn(spawn_args)
+			unit_multiplayer_spawner.spawn.bind(spawn_args)
 		)
 
 	current_wave += 1
@@ -182,7 +182,7 @@ func _multiplayer_spawn_unit(data: Dictionary):
 		return
 
 	var new_unit = new_unit_data.spawn(data)
-	new_unit.died.connect(func(): _on_unit_death(new_unit))
+	new_unit.died.connect(_on_unit_death.bind(new_unit))
 
 	if map == null:
 		print("Map is null not setting it in spawner")

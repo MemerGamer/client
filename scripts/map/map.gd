@@ -156,6 +156,9 @@ func client_setup():
 
 
 func on_unit_damaged(unit: Unit, damage: int, damage_type: Unit.DamageType):
+	if not multiplayer.is_server():
+		return
+
 	var damage_popup_args = {"position": unit.server_position, "value": damage, "type": damage_type}
 	damage_popup_spawner.spawn(damage_popup_args)
 
