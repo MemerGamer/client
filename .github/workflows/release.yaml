@@ -27,7 +27,7 @@ jobs:
     uses: ./.github/workflows/compile_and_export_all.yaml
     secrets: inherit
     with:
-      GODOT_VERSION: '4.3-rc2'
+      GODOT_VERSION: '4.3-stable'
       GODOT_REPO: 'https://github.com/godotengine/godot-builds'
       UPDATE_CACHES: true
 
