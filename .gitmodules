@@ -1,6 +1,6 @@
 [submodule "extensions/godot-cpp"]
 	path = extensions/godot-cpp
-	branch = master
+	branch = 4.3
 	url = https://github.com/godotengine/godot-cpp
 [submodule "default_assets"]
 	path = default_assets
