@@ -102,17 +102,17 @@ func get_level() -> int:
 	return _level
 
 
-func try_activate(target = null) -> bool:
+func try_activate(target = null) -> ActionEffect.ActivationState:
 	if _current_effect == null:
 		print("Could not activate ability. Ability has no effect.")
-		return false
+		return ActionEffect.ActivationState.NONE
 
-	var activatanle_effect := _current_effect as ActiveActionEffect
-	if activatanle_effect == null:
+	var activatable_effect := _current_effect as ActiveActionEffect
+	if activatable_effect == null:
 		print("Could not activate ability. Ability is not an active ability.")
-		return false
+		return ActionEffect.ActivationState.NONE
 
-	return activatanle_effect.activate(_connected_unit, target)
+	return activatable_effect.activate(_connected_unit, target)
 
 
 func _ready() -> void:

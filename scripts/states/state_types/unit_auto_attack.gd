@@ -55,11 +55,14 @@ func update_tick_server(entity: Unit, delta):
 		> entity.current_stats.attack_range * 0.01
 	)
 
+	var current_state: ActionEffect.ActivationState
 	if not should_move:
-		should_move = not basic_attack_ability.try_activate(target_unit)
+		current_state = basic_attack_ability.try_activate(target_unit)
+	else:
+		current_state = basic_attack_ability._current_effect.get_activation_state()
 
-	var current_state = basic_attack_ability._current_effect.get_activation_state()
+	should_move = (should_move and current_state != ActionEffect.ActivationState.CHANNELING)
 
-	if should_move and current_state != ActionEffect.ActivationState.CHANNELING:
+	if should_move:
 		entity.nav_agent.target_position = target_unit.global_position
 		entity.move_on_path(delta)

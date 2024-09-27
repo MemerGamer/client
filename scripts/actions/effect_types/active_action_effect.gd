@@ -71,24 +71,25 @@ func stop_preview_cast(_caster: Unit) -> void:
 	print("Not implemented. Needs to be implemented in the subclass.")
 
 
-func activate(caster: Unit, target) -> bool:
+func activate(caster: Unit, target) -> ActivationState:
 	match _activation_state:
 		ActivationState.NONE:
 			print("Could not activate ability. Ability has no activation state.")
-			return false
+			return ActivationState.NONE
 
 		ActivationState.COOLDOWN, ActivationState.CHANNELING, ActivationState.ACTIVE:
-			return false
+			return _activation_state
 
 		ActivationState.READY:
-			return _start_targeting(caster)
+			_start_targeting(caster)
 
 		ActivationState.TARGETING:
-			return _finish_targeting(caster, target)
+			_finish_targeting(caster, target)
 
 		_:
 			print("Could not activate ability. Unknown activation state.")
-			return false
+
+	return _activation_state
 
 
 func _start_targeting(caster: Unit) -> bool:
