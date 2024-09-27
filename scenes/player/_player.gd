@@ -100,8 +100,12 @@ func _input(event):
 			return
 
 	if event.is_action("player_attack_closest"):
-		if not _player_action_attack_near(character.global_position, null):
-			character.change_state("Idle", null)
+		if event.is_pressed():
+			_show_ability_indicator("basic_attack")
+			if not _player_action_attack_near(character.global_position, null):
+				character.change_state("Idle", null)
+		else:
+			_hide_ability_inidicator("basic_attack")
 
 		return
 

@@ -137,6 +137,7 @@ func _finish_channeling(caster_path: NodePath, target_path: NodePath) -> void:
 	projectile_config["damage_type"] = damage_type
 	projectile_config["damage"] = caster.current_stats.attack_damage
 	projectile_config["source_type"] = _effect_source
+	projectile_config["scaling"] = scaling_string
 
 	projectile_config["model"] = model
 	projectile_config["model_scale"] = model_scale

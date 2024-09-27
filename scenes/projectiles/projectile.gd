@@ -11,6 +11,7 @@ var is_crit: bool = false
 var speed: float = 80.0
 var damage_type: Unit.DamageType = Unit.DamageType.PHYSICAL
 var damage_src: Unit.SourceType = Unit.SourceType.ITEM_EFFECT
+var scaling_calc = null
 
 var target: Unit
 var caster: Unit
@@ -48,6 +49,15 @@ static func from_dict(projectile_config: Dictionary) -> Projectile:
 	new_projectile.model_rotation = projectile_config["model_rotation"]
 	new_projectile.speed = projectile_config["speed"]
 	new_projectile.damage_type = projectile_config["damage_type"]
+
+	var scaling_funcs = ScalingsBuilder.build_scaling_function(str(projectile_config["scaling"]))
+	if scaling_funcs == null:
+		print("Could not create Projectile from dictionary. Could not build scaling function.")
+		print("projectile_config dict: " + str(projectile_config))
+		new_projectile.scaling_calc = null
+	else:
+		new_projectile.scaling_calc = scaling_funcs[0]
+
 	new_projectile.launch_sfx = JsonHelper.get_optional_string(projectile_config, "launch_sfx", "")
 
 	new_projectile.damage_src = (
@@ -201,4 +211,10 @@ func _process(delta):
 
 func _handle_auto_attack_hit(_caster, _target, _is_crit, _damage_type):
 	if multiplayer.is_server():
-		caster.attack_connected.emit(_caster, _target, _is_crit, _damage_type, damage_src)
+		var damage: float
+		if scaling_calc:
+			damage = scaling_calc.call(_caster, _target)
+		else:
+			damage = -1
+
+		caster.attack_connected.emit(_caster, _target, _is_crit, damage, _damage_type, damage_src)

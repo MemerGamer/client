@@ -12,6 +12,10 @@ var channel_time: float = 0.0
 var active_time: float = 0.0
 var cooldown_time: float = 0.0
 
+var scaling_string: String = ""
+var scaling_calc = null
+var scaling_display = null
+
 var cooldown_timer := Timer.new()
 
 var _current_haste: float = 0.0
@@ -27,9 +31,26 @@ func init_from_dict(_dict: Dictionary, _is_ability: bool = false) -> bool:
 	if not attack_speed_scaled:
 		if not _dict.has("cooldown"):
 			print(
-				"Could not create ActiveActionEffect from dictionary. Dictionary is missing required keys."
+				"Could not create ActiveActionEffect from dictionary. Missing required keys (cooldown)."
 			)
 			return false
+
+	if not _dict.has("scaling"):
+		print(
+			"Could not create ActiveActionEffect from dictionary. Missing required keys (scaling)."
+		)
+		return false
+
+	scaling_string = str(_dict["scaling"])
+	var scaling_funcs = ScalingsBuilder.build_scaling_function(scaling_string)
+	if scaling_funcs == null:
+		print(
+			"Could not create ActiveActionEffect from dictionary. Could not build scaling function."
+		)
+		return false
+
+	scaling_calc = scaling_funcs[0]
+	scaling_display = scaling_funcs[1]
 
 	use_attack_range = JsonHelper.get_optional_bool(_dict, "use_attack_range", false)
 	casting_range = JsonHelper.get_optional_number(_dict, "casting_range", 0.0)
@@ -48,19 +69,24 @@ func get_copy(new_effect: ActionEffect = null) -> ActionEffect:
 		new_effect = ActiveActionEffect.new()
 
 	new_effect = super(new_effect)
+	var new_fx := new_effect as ActiveActionEffect
 
-	new_effect.attack_speed_scaled = attack_speed_scaled
-	new_effect.windup_ratio = windup_ratio
+	new_fx.attack_speed_scaled = attack_speed_scaled
+	new_fx.windup_ratio = windup_ratio
 
-	new_effect.in_casting_preview = in_casting_preview
-	new_effect.casting_range = casting_range
-	new_effect.use_attack_range = use_attack_range
+	new_fx.in_casting_preview = in_casting_preview
+	new_fx.casting_range = casting_range
+	new_fx.use_attack_range = use_attack_range
 
-	new_effect.channel_time = channel_time
-	new_effect.active_time = active_time
-	new_effect.cooldown_time = cooldown_time
+	new_fx.scaling_string = scaling_string
+	new_fx.scaling_calc = scaling_calc
+	new_fx.scaling_display = scaling_display
 
-	return new_effect
+	new_fx.channel_time = channel_time
+	new_fx.active_time = active_time
+	new_fx.cooldown_time = cooldown_time
+
+	return new_fx
 
 
 func start_preview_cast(_caster: Unit) -> void:

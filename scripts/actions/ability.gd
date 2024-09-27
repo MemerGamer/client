@@ -5,7 +5,7 @@ var _display_id: Identifier
 var _texture_id: Identifier
 
 var _can_levelup: bool = false
-var _level: int = 0
+var _level: int = -1
 var _ability_levels: Array[ActionEffect] = []
 var _current_effect: ActionEffect = null
 
@@ -42,6 +42,7 @@ static func from_dict(_dict: Dictionary) -> Ability:
 
 		ability_effect.name = ability_instance._display_id.to_string()
 		ability_instance._ability_levels.append(ability_effect)
+		ability_instance._level = 0
 		ability_instance._current_effect = ability_effect
 
 		return ability_instance
@@ -131,7 +132,7 @@ func upgrade():
 		print("Could not upgrade ability. Ability has no upgrades.")
 		return
 
-	if _level >= _ability_levels.size():
+	if not (_level + 1 < _ability_levels.size()):
 		print("Could not upgrade ability. Ability is already at max level.")
 		return
 

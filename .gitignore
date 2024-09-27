@@ -11,6 +11,7 @@ android/
 *.zip
 lang/*.translation
 .vscode/
+.idea
 .cache
 
 # exports

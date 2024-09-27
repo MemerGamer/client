@@ -29,7 +29,12 @@ signal targeted_cast_finished(caster: Unit, target: Unit, src: SourceType)
 ## Use this to apply effects to the target or the caster.
 ## On hit damage effects should use this signal to apply additinal damage effects.
 signal attack_connected(
-	caster: Unit, target: Unit, is_crit: bool, damage_type: DamageType, src: SourceType
+	caster: Unit,
+	target: Unit,
+	is_crit: bool,
+	raw_amount: int,
+	damage_type: DamageType,
+	src: SourceType
 )
 
 ## Gets emitted on the caster after the target damage calculation has been done.
@@ -694,15 +699,18 @@ func _passive_regen_handler():
 		current_stats_changed.emit(old_stats, current_stats)
 
 
-func _attack_connected(caster, target, is_crit, damage_type, src: SourceType):
+func _attack_connected(caster, target, is_crit, raw_amount: int, damage_type, src: SourceType):
 	if caster != self:
 		return
 
-	var damage = current_stats.attack_damage
+	if raw_amount < 0:
+		raw_amount = current_stats.attack_damage
+
+	var damage = float(raw_amount)
 	if is_crit:
 		damage *= (100 + current_stats.attack_crit_damage) * 0.01
 
-	target.take_damage(caster, is_crit, damage_type, damage, src)
+	target.take_damage(caster, is_crit, damage_type, int(damage), src)
 
 
 func _damage_actually_dealt(

@@ -105,7 +105,12 @@ func disconnect_from_unit(_unit: Unit) -> void:
 
 
 func _on_attack_connected_fixed(
-	caster: Unit, target: Unit, is_crit: bool, _damage_type, _damage_src: Unit.SourceType
+	caster: Unit,
+	target: Unit,
+	is_crit: bool,
+	_damage_amount,
+	_damage_type,
+	_damage_src: Unit.SourceType
 ) -> void:
 	if not _can_trigger_onhit(caster, target, is_crit, _damage_type, _damage_src):
 		return
@@ -114,7 +119,12 @@ func _on_attack_connected_fixed(
 
 
 func _on_attack_connected_scaled(
-	caster: Unit, target: Unit, is_crit: bool, _damage_type, _damage_src: Unit.SourceType
+	caster: Unit,
+	target: Unit,
+	is_crit: bool,
+	_damage_amount,
+	_damage_type,
+	_damage_src: Unit.SourceType
 ) -> void:
 	if not _can_trigger_onhit(caster, target, is_crit, _damage_type, _damage_src):
 		return
