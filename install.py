@@ -40,13 +40,11 @@ def main(args):
             subprocess.run([sys.executable, "utility_scripts/compile.py"])
 
 def validate_python_version() -> bool:
-
-    isHigherMajor = sys.version_info[0] > requiredPythonMajorVersion
-
-    if isHigherMajor:
-        return True
+    if sys.version_info[0] != requiredPythonMajorVersion:
+        print(f"You are using and unsupported major python version. Only python {requiredPythonMajorVersion} is supported")
+        return False
     
-    if sys.version_info[0] is requiredPythonMajorVersion and sys.version_info[1] > requiredPythonMinorVersion:
+    if sys.version_info[1] >= requiredPythonMinorVersion:
         return True
 
     print(f"Please update your python to {requiredPythonMajorVersion}.{requiredPythonMinorVersion} or higher")
