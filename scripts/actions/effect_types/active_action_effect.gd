@@ -118,6 +118,21 @@ func activate(caster: Unit, target) -> ActivationState:
 	return _activation_state
 
 
+func interrupt(caster: Unit):
+	match _activation_state:
+		ActivationState.TARGETING:
+			_activation_state = ActivationState.READY
+
+		ActivationState.CHANNELING:
+			_activation_state = ActivationState.READY
+
+		ActivationState.ACTIVE:
+			_activation_state = ActivationState.COOLDOWN
+			_finish_active(caster, null)
+		_:
+			pass
+
+
 func _start_targeting(caster: Unit) -> bool:
 	_activation_state = ActivationState.TARGETING
 	if _ability_type == AbilityType.AUTO_TARGETED:
@@ -168,6 +183,9 @@ func _start_active(caster: Unit, _target) -> void:
 
 
 func _finish_active(caster: Unit, _target) -> void:
+	if _activation_state != ActivationState.ACTIVE:
+		return
+
 	_current_haste = float(caster.current_stats.ability_haste)
 	_start_cooldown()
 

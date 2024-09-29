@@ -93,6 +93,7 @@ const StateMachineScript = preload("res://scripts/states/_state_machine.gd")
 const StateIdleScript = preload("res://scripts/states/state_types/unit_idle.gd")
 const StateMoveScript = preload("res://scripts/states/state_types/unit_move.gd")
 const StateAutoAttackScript = preload("res://scripts/states/state_types/unit_auto_attack.gd")
+const StateAbilityCastScript = preload("res://scripts/states/state_types/unit_ability_cast.gd")
 
 const HealthbarScene = preload("res://ui/player_stats/healthbar.tscn")
 
@@ -276,6 +277,11 @@ func _setup_scene_elements():
 	state_auto_attack_node.name = "Attacking"
 	state_auto_attack_node.set_script(StateAutoAttackScript)
 	state_machine_node.add_child(state_auto_attack_node)
+
+	var state_ability_cast_node = Node.new()
+	state_ability_cast_node.name = "Casting"
+	state_ability_cast_node.set_script(StateAbilityCastScript)
+	state_machine_node.add_child(state_ability_cast_node)
 
 	state_machine_node.initial_state = state_idle_node
 	add_child(state_machine_node)
