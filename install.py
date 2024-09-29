@@ -6,8 +6,14 @@ import zipfile
 
 import requests
 
+requiredPythonMajorVersion = 3
+requiredPythonMinorVersion = 12
 
 def main(args):
+
+    # check if python version is what we expect
+    if validate_python_version() is False:
+        return
 
     # update the submodules unless the user specifies otherwise
     if args["update_submodules"]:
@@ -33,6 +39,20 @@ def main(args):
             print("Compiling extension")
             subprocess.run([sys.executable, "utility_scripts/compile.py"])
 
+def validate_python_version() -> bool:
+
+    isHigherMajor = sys.version_info[0] > requiredPythonMajorVersion
+
+    if isHigherMajor:
+        return True
+    
+    if sys.version_info[0] is requiredPythonMajorVersion and sys.version_info[1] > requiredPythonMinorVersion:
+        return True
+
+    print(f"Please update your python to {requiredPythonMajorVersion}.{requiredPythonMinorVersion} or higher")
+    print(f"Installing failed.")
+
+    return False
 
 def download_and_install_extension() -> bool:
     # get the current tag using git

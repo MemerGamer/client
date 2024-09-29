@@ -39,7 +39,7 @@ After that it will try to download the extension or compile it if the download f
 ### Manually downloading the extension
 
 The `extensions.zip` is distributed as part of the releases.
-I case the CI fails, you can also download it from the CI artifacts directly.
+In case the CI fails, you can also download it from the CI artifacts directly.
 
 Simply extract the archive file to the `bin` directory and you are good to go.
 
@@ -79,7 +79,7 @@ This can be done with the following command:
 python ./default_assets/manifests.py
 ```
 
-## Additional/overwirtten asset packs
+## Additional/overwritten asset packs
 
 It is possible to have additional asset packs or override data of existing ones.
 To do this you need asset packs in the user dir.
