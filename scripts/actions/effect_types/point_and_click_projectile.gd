@@ -47,6 +47,8 @@ func init_from_dict(_dict: Dictionary, _is_ability: bool = false) -> bool:
 	)
 	launch_sfx = JsonHelper.get_optional_string(raw_projectile_config, "launch_sfx", "")
 
+	_ability_type = ActionEffect.AbilityType.FIXED_TARGETED
+
 	return true
 
 

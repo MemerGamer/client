@@ -14,7 +14,7 @@ var is_left_mouse_dragging := false
 var character: Unit
 var attack_collider: Area3D
 
-var last_movement_gamepad = false
+var last_movement_gamepad = true
 
 @onready var spring_arm: SpringArm3D = $SpringArm3D
 @onready var camera: Camera3D = $SpringArm3D/Camera3D
@@ -99,15 +99,8 @@ func _input(event):
 			player_mouse_action(event, false)
 			return
 
-	if event.is_action("player_attack_closest"):
-		if event.is_pressed():
-			_show_ability_indicator("basic_attack")
-			if not _player_action_attack_near(character.global_position, null):
-				character.change_state("Idle", null)
-		else:
-			_hide_ability_inidicator("basic_attack")
-
-		return
+	if event is InputEventJoypadButton:
+		last_movement_gamepad = true
 
 
 func get_target_position(pid: int) -> Vector3:
@@ -154,11 +147,11 @@ func _player_action_attack(collider):
 	_play_move_marker(colliding_unit.global_position, true)
 
 
-func _player_action_attack_near(center: Vector3, target_mode = null) -> bool:
+func _get_nearest_target(center: Vector3, target_range: int, target_mode = null) -> Unit:
 	var targeted_unit = target_mode as Unit
 	if targeted_unit:
 		print("Attacking " + targeted_unit.name)
-		return false
+		return targeted_unit
 
 	var target_players = true
 	var target_minions = true
@@ -178,8 +171,9 @@ func _player_action_attack_near(center: Vector3, target_mode = null) -> bool:
 
 	var closest_unit = null
 	var closest_distance = 1000000
+	var target_distance = target_range * 0.01
 
-	attack_collider.get_child(0).shape.radius = character.current_stats.attack_range * 0.01
+	attack_collider.get_child(0).shape.radius = target_distance
 	attack_collider.global_transform.origin = character.server_position
 
 	var bodies = attack_collider.get_overlapping_bodies()
@@ -201,10 +195,7 @@ func _player_action_attack_near(center: Vector3, target_mode = null) -> bool:
 		if unit.is_structure and not target_structures:
 			continue
 
-		if (
-			unit.global_position.distance_to(character.global_position)
-			> (character.current_stats.attack_range * 0.01)
-		):
+		if unit.global_position.distance_to(character.global_position) > (target_distance):
 			continue
 
 		var distance = unit.global_position.distance_to(center)
@@ -213,6 +204,14 @@ func _player_action_attack_near(center: Vector3, target_mode = null) -> bool:
 
 		closest_unit = unit
 		closest_distance = distance
+
+	return closest_unit
+
+
+func _player_action_attack_near(center: Vector3, target_mode = null) -> bool:
+	var closest_unit = _get_nearest_target(
+		center, character.current_stats.attack_range, target_mode
+	)
 
 	if closest_unit == null:
 		print("No valid targets in range")
@@ -265,6 +264,10 @@ func _process(delta):
 	if Config.is_dedicated_server:
 		return
 
+	# If you want to see the gamepad info, uncomment the line below
+	# This might help yu find out why input actions are not triggered
+	#_print_gamepad_info()
+
 	# Handle the gamepad and touch movement input
 	var movement_delta = Vector2()
 
@@ -299,20 +302,118 @@ func _process(delta):
 	position = position.lerp(camera_target_position, delta * Config.camera_settings.cam_speed)
 
 
+func _print_gamepad_info():
+	var gamepads = Input.get_connected_joypads()
+	for gamepad in gamepads:
+		print(
+			(
+				"Gamepad: %d, l2: %f, r2: %f, lx: %f, ly: %f, rx: %f, ry: %f"
+				% [
+					gamepad,
+					Input.get_joy_axis(gamepad, JOY_AXIS_TRIGGER_LEFT),
+					Input.get_joy_axis(gamepad, JOY_AXIS_TRIGGER_RIGHT),
+					Input.get_joy_axis(gamepad, JOY_AXIS_LEFT_X),
+					Input.get_joy_axis(gamepad, JOY_AXIS_LEFT_Y),
+					Input.get_joy_axis(gamepad, JOY_AXIS_RIGHT_X),
+					Input.get_joy_axis(gamepad, JOY_AXIS_RIGHT_Y),
+				]
+			)
+		)
+
+
 func detect_ability_use() -> void:
 	var pid = multiplayer.get_unique_id()
+	var curr_char := get_character(pid) as Unit
+	if curr_char == null:
+		return
+
+	var ability_index = -1
+	var last_target_pos: Vector3 = curr_char.global_position
+
+	var cast_is_casting: bool = Input.is_action_pressed("player_layout_switch_cast", true)
+	var cast_is_upgrade: bool = Input.is_action_pressed("player_layout_switch_upgrade", true)
+
+	if not last_movement_gamepad:
+		last_target_pos = camera.project_ray_origin(get_viewport().get_mouse_position())
+		cast_is_casting = not cast_is_upgrade
+
+	if (not cast_is_casting) and (not cast_is_upgrade):
+		if last_movement_gamepad:
+			if Input.is_action_just_pressed("player_attack_closest"):
+				_show_ability_indicator("basic_attack")
+				if not _player_action_attack_near(curr_char.global_position, null):
+					curr_char.change_state("Idle", null)
+
+			if Input.is_action_just_released("player_attack_closest"):
+				_hide_ability_inidicator("basic_attack")
+
+		return
+
 	if Input.is_action_just_pressed("player_ability1"):
-		get_character(pid).trigger_ability(1)
-		return
+		ability_index = 1
 	if Input.is_action_just_pressed("player_ability2"):
-		get_character(pid).trigger_ability(2)
-		return
+		ability_index = 2
 	if Input.is_action_just_pressed("player_ability3"):
-		get_character(pid).trigger_ability(3)
-		return
+		ability_index = 3
 	if Input.is_action_just_pressed("player_ability4"):
-		get_character(pid).trigger_ability(4)
+		ability_index = 4
+
+	if ability_index < 0:
 		return
+
+	var ability_name = "ability_" + str(ability_index)
+	var ability = curr_char.get_node("Abilities/" + ability_name) as Ability
+	if ability == null:
+		print("Ability not found: " + ability_name)
+		return
+
+	if cast_is_upgrade:
+		print("Upgrade ability: " + ability_name)
+		ability.upgrade()
+		return
+
+	var current_effect = ability._current_effect as ActiveActionEffect
+	if current_effect == null:
+		print("Ability is not an active ability.")
+		return
+
+	var ability_state = current_effect.get_activation_state() as ActionEffect.ActivationState
+	if (
+		ability_state == ActionEffect.ActivationState.NONE
+		or ability_state == ActionEffect.ActivationState.COOLDOWN
+	):
+		print("Ability is not ready to be cast.")
+		return
+
+	match current_effect.get_ability_type():
+		ActionEffect.AbilityType.PASSIVE:
+			print("Ability is not a casting ability.")
+		ActionEffect.AbilityType.AUTO_TARGETED:
+			ability.try_activate()
+		ActionEffect.AbilityType.FIXED_TARGETED:
+			var closest_unit = _get_nearest_target(
+				last_target_pos, current_effect.casting_range, null
+			)
+			if closest_unit == null:
+				print("No valid targets in range")
+				return
+
+			ability.try_activate(closest_unit)
+		ActionEffect.AbilityType.DIRECTION_TARGETED:
+			var closest_unit = _get_nearest_target(
+				last_target_pos, current_effect.casting_range, null
+			)
+			if closest_unit == null:
+				print("No valid targets in range")
+				return
+
+			var target_direction: Vector3 = last_target_pos.direction_to(
+				closest_unit.global_position
+			)
+
+			ability.try_activate(target_direction)
+		_:  # Unknown ability type
+			print("Unknown ability type.")
 
 
 func camera_movement_handler() -> void:

@@ -613,26 +613,6 @@ func move_on_path(delta: float) -> bool:
 	return false
 
 
-func trigger_ability(_index: int):
-	if not can_cast():
-		return
-
-	# check if the ability exists
-	var abilities_node = get_node("Abilities")
-	if abilities_node == null:
-		print("Abilities node not found.")
-		return
-
-	var ability_cast_name = "ability_" + str(_index)
-	var ability_node := abilities_node.get_node(ability_cast_name) as Ability
-	if ability_node == null:
-		print("Ability not found (%s)." % ability_cast_name)
-		return
-
-	ability_node.try_activate()
-	print("Triggering ability %s." % ability_cast_name)
-
-
 func apply_effect(effect: UnitEffect):
 	effect_array.append(effect)
 	add_child(effect)
