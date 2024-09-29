@@ -511,7 +511,7 @@ func take_damage(
 ):
 	if not multiplayer:
 		return
-	
+
 	if not multiplayer.is_server():
 		return
 

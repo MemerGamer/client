@@ -378,31 +378,28 @@ func detect_ability_use() -> void:
 		print("Ability is not ready to be cast.")
 		return
 
-	match ability.get_ability_type():
-		ActionEffect.AbilityType.PASSIVE:
-			print("Ability is not a casting ability.")
-		ActionEffect.AbilityType.AUTO_TARGETED:
-			ability.try_activate()
-		ActionEffect.AbilityType.FIXED_TARGETED:
-			var closest_unit = _get_nearest_target(last_target_pos, ability.get_cast_range(), null)
-			if closest_unit == null:
-				print("No valid targets in range")
-				return
+	var closest_unit: Unit = _get_nearest_target(last_target_pos, ability.get_cast_range(), null)
+	if closest_unit:
+		_play_move_marker(closest_unit.global_position, true)
 
-			ability.try_activate(closest_unit)
-		ActionEffect.AbilityType.DIRECTION_TARGETED:
-			var closest_unit = _get_nearest_target(last_target_pos, ability.get_cast_range(), null)
-			if closest_unit == null:
-				print("No valid targets in range")
-				return
+	if cast_finalized:
+		match ability.get_ability_type():
+			ActionEffect.AbilityType.PASSIVE:
+				print("Ability is not a casting ability.")
+			ActionEffect.AbilityType.AUTO_TARGETED:
+				ability.try_activate()
+			ActionEffect.AbilityType.FIXED_TARGETED:
+				if closest_unit:
+					ability.try_activate(closest_unit)
+			ActionEffect.AbilityType.DIRECTION_TARGETED:
+				if closest_unit:
+					var target_direction: Vector3 = last_target_pos.direction_to(
+						closest_unit.global_position
+					)
 
-			var target_direction: Vector3 = last_target_pos.direction_to(
-				closest_unit.global_position
-			)
-
-			ability.try_activate(target_direction)
-		_:  # Unknown ability type
-			print("Unknown ability type.")
+					ability.try_activate(target_direction)
+			_:  # Unknown ability type
+				print("Unknown ability type.")
 
 
 func camera_movement_handler() -> void:
