@@ -136,6 +136,7 @@ var level_exp: int = 0
 var required_exp: int = 100
 var dropped_exp: int = 0
 var exp_per_second: float = 0
+var ability_upgrade_points: int = 1
 
 var overheal: bool = false
 var max_overheal: int = 0
@@ -359,6 +360,7 @@ func level_up(times: int = 1):
 	current_stats_changed.emit(old_stats, current_stats)
 
 	level += times
+	ability_upgrade_points += times
 	required_exp = get_exp_for_levelup(level + 1)
 
 
@@ -507,6 +509,9 @@ func update_target_location(target_location: Vector3):
 func take_damage(
 	caster: Unit, is_crit: bool, damage_type: DamageType, damage_amount: int, src: SourceType
 ):
+	if not multiplayer:
+		return
+	
 	if not multiplayer.is_server():
 		return
 
@@ -737,6 +742,24 @@ func get_current_state_name() -> String:
 	if curr_state == null:
 		return ""
 	return curr_state.name
+
+
+@rpc("authority", "call_local")
+func upgrade_ability(ability_name):
+	if not abilities.has(ability_name):
+		print("Character does not have ability: " + ability_name)
+		return
+
+	var ability = abilities[ability_name] as Ability
+	if not ability:
+		print("Failed to find ability: " + ability_name)
+		return
+
+	if not ability.upgrade():
+		print("Failed to upgrade ability: " + ability_name)
+		return
+
+	ability_upgrade_points -= 1
 
 
 @rpc("authority", "call_local")

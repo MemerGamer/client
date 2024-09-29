@@ -103,6 +103,38 @@ func get_level() -> int:
 	return _level
 
 
+func get_cast_range() -> int:
+	if _current_effect == null:
+		return 0
+
+	var active_effect := _current_effect as ActiveActionEffect
+	if active_effect == null:
+		return 0
+
+	if active_effect.use_attack_range:
+		return _connected_unit.current_stats.attack_range
+
+	return int(active_effect.casting_range)
+
+
+func get_ability_type() -> ActionEffect.AbilityType:
+	if _current_effect == null:
+		return ActionEffect.AbilityType.PASSIVE
+
+	return _current_effect.get_ability_type()
+
+
+func get_activation_state() -> ActionEffect.ActivationState:
+	if _current_effect == null:
+		return ActionEffect.ActivationState.NONE
+
+	var activatable_effect := _current_effect as ActiveActionEffect
+	if activatable_effect == null:
+		return ActionEffect.ActivationState.NONE
+
+	return activatable_effect.get_activation_state()
+
+
 func try_activate(target = null) -> ActionEffect.ActivationState:
 	if _current_effect == null:
 		print("Could not activate ability. Ability has no effect.")
@@ -127,14 +159,21 @@ func _ready() -> void:
 		_current_effect.connect_to_unit(_connected_unit)
 
 
-func upgrade():
+func can_upgrade() -> bool:
+	if not _can_levelup:
+		return false
+
+	return _level + 1 < _ability_levels.size()
+
+
+func upgrade() -> bool:
 	if not _can_levelup:
 		print("Could not upgrade ability. Ability has no upgrades.")
-		return
+		return false
 
 	if not (_level + 1 < _ability_levels.size()):
 		print("Could not upgrade ability. Ability is already at max level.")
-		return
+		return false
 
 	if _current_effect != null:
 		_current_effect.disconnect_from_unit(_connected_unit)
@@ -146,3 +185,5 @@ func upgrade():
 
 	add_child(_current_effect)
 	_current_effect.connect_to_unit(_connected_unit)
+
+	return true

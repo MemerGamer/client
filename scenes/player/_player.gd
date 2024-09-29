@@ -13,6 +13,7 @@ var is_right_mouse_dragging := false
 var is_left_mouse_dragging := false
 var character: Unit
 var attack_collider: Area3D
+var current_ability_name: String = ""
 
 var last_movement_gamepad = true
 
@@ -66,11 +67,6 @@ func _input(event):
 	if event is InputEventMouseButton:
 		last_movement_gamepad = false
 
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			player_mouse_action(event, true, true)
-			is_right_mouse_dragging = false
-			_show_ability_indicator("basic_attack")
-
 		# Right click to move
 		if event.button_index == MOUSE_BUTTON_RIGHT:
 			# Start dragging
@@ -90,8 +86,6 @@ func _input(event):
 			is_middle_mouse_dragging = false
 			is_right_mouse_dragging = false
 
-			_hide_ability_inidicator("basic_attack")
-
 		return
 
 	if event is InputEventMouseMotion:
@@ -110,7 +104,7 @@ func get_target_position(pid: int) -> Vector3:
 	return Vector3.ZERO
 
 
-func player_mouse_action(event, play_marker: bool = false, attack_move: bool = false):
+func player_mouse_action(event, play_marker: bool = false):
 	var from = camera.project_ray_origin(event.position)
 	var to = from + camera.project_ray_normal(event.position) * 1000
 
@@ -122,29 +116,7 @@ func player_mouse_action(event, play_marker: bool = false, attack_move: bool = f
 
 	# Move
 	if result.collider.is_in_group("Ground"):
-		if attack_move:
-			if not _player_action_attack_near(result.position, null):
-				character.change_state("Idle", null)
-		else:
-			_player_action_move(result.position, play_marker)
-
-	else:
-		# Attack
-		_player_action_attack(result.collider)
-
-
-func _player_action_attack(collider):
-	var colliding_unit = collider as Unit
-	if not colliding_unit:
-		return
-
-	if colliding_unit.team == get_character(multiplayer.get_unique_id()).team:
-		return
-
-	var target_path = str(colliding_unit.get_path())
-	server_listener.rpc_id(get_multiplayer_authority(), "basic_attack", target_path)
-
-	_play_move_marker(colliding_unit.global_position, true)
+		_player_action_move(result.position, play_marker)
 
 
 func _get_nearest_target(center: Vector3, target_range: int, target_mode = null) -> Unit:
@@ -209,15 +181,21 @@ func _get_nearest_target(center: Vector3, target_range: int, target_mode = null)
 
 
 func _player_action_attack_near(center: Vector3, target_mode = null) -> bool:
-	var closest_unit = _get_nearest_target(
-		center, character.current_stats.attack_range, target_mode
+	var closest_unit := (
+		_get_nearest_target(center, character.current_stats.attack_range, target_mode) as Unit
 	)
 
 	if closest_unit == null:
 		print("No valid targets in range")
 		return false
 
-	_player_action_attack(closest_unit)
+	if closest_unit.team == get_character(multiplayer.get_unique_id()).team:
+		return false
+
+	var target_path = str(closest_unit.get_path())
+	server_listener.rpc_id(get_multiplayer_authority(), "basic_attack", target_path)
+
+	_play_move_marker(closest_unit.global_position, true)
 
 	return true
 
@@ -264,14 +242,15 @@ func _process(delta):
 	if Config.is_dedicated_server:
 		return
 
+	if Config.in_focued_menu:
+		return
+
 	# If you want to see the gamepad info, uncomment the line below
 	# This might help yu find out why input actions are not triggered
 	#_print_gamepad_info()
 
-	# Handle the gamepad and touch movement input
-	var movement_delta = Vector2()
-
-	movement_delta = Input.get_vector(
+	# Handle the gamepad and touch movement inputs
+	var movement_delta: Vector2 = Input.get_vector(
 		"character_move_left",
 		"character_move_right",
 		"character_move_up",
@@ -327,7 +306,6 @@ func detect_ability_use() -> void:
 	if curr_char == null:
 		return
 
-	var ability_index = -1
 	var last_target_pos: Vector3 = curr_char.global_position
 
 	var cast_is_casting: bool = Input.is_action_pressed("player_layout_switch_cast", true)
@@ -337,47 +315,62 @@ func detect_ability_use() -> void:
 		last_target_pos = camera.project_ray_origin(get_viewport().get_mouse_position())
 		cast_is_casting = not cast_is_upgrade
 
-	if (not cast_is_casting) and (not cast_is_upgrade):
-		if last_movement_gamepad:
-			if Input.is_action_just_pressed("player_attack_closest"):
-				_show_ability_indicator("basic_attack")
-				if not _player_action_attack_near(curr_char.global_position, null):
-					curr_char.change_state("Idle", null)
+	var check_ability_cast = cast_is_casting or cast_is_upgrade
+	var check_basic_attack_cast = (not check_ability_cast) or (not last_movement_gamepad)
 
-			if Input.is_action_just_released("player_attack_closest"):
-				_hide_ability_inidicator("basic_attack")
+	var ability: Ability
+	var ability_name: String
+
+	if check_basic_attack_cast:
+		if Input.is_action_pressed("player_attack_closest"):
+			ability_name = "basic_attack"
+
+	if check_ability_cast:
+		if Input.is_action_pressed("player_ability1"):
+			ability_name = "ability_1"
+
+		if Input.is_action_pressed("player_ability2"):
+			ability_name = "ability_2"
+
+		if Input.is_action_pressed("player_ability3"):
+			ability_name = "ability_3"
+
+		if Input.is_action_pressed("player_ability4"):
+			ability_name = "ability_4"
+
+	var cast_finalized = false
+	if ability_name != current_ability_name:
+		if current_ability_name != "":
+			_hide_ability_inidicator(current_ability_name)
+
+		if ability_name != "":
+			_show_ability_indicator(ability_name)
+			current_ability_name = ability_name
+		else:
+			cast_finalized = true
+			ability_name = current_ability_name
+			current_ability_name = ""
+
+	if ability_name == "":
+		return
+
+	if cast_is_upgrade:
+		if cast_finalized:
+			if curr_char.ability_upgrade_points <= 0:
+				print("Not enough ability points to upgrade ability: " + ability_name)
+				return
+
+			print("Request ability upgrade: " + ability_name)
+			server_listener.rpc_id(get_multiplayer_authority(), "upgrade_ability", ability_name)
 
 		return
 
-	if Input.is_action_just_pressed("player_ability1"):
-		ability_index = 1
-	if Input.is_action_just_pressed("player_ability2"):
-		ability_index = 2
-	if Input.is_action_just_pressed("player_ability3"):
-		ability_index = 3
-	if Input.is_action_just_pressed("player_ability4"):
-		ability_index = 4
-
-	if ability_index < 0:
-		return
-
-	var ability_name = "ability_" + str(ability_index)
-	var ability = curr_char.get_node("Abilities/" + ability_name) as Ability
+	ability = curr_char.get_node("Abilities/" + ability_name) as Ability
 	if ability == null:
 		print("Ability not found: " + ability_name)
 		return
 
-	if cast_is_upgrade:
-		print("Upgrade ability: " + ability_name)
-		ability.upgrade()
-		return
-
-	var current_effect = ability._current_effect as ActiveActionEffect
-	if current_effect == null:
-		print("Ability is not an active ability.")
-		return
-
-	var ability_state = current_effect.get_activation_state() as ActionEffect.ActivationState
+	var ability_state := ability.get_activation_state()
 	if (
 		ability_state == ActionEffect.ActivationState.NONE
 		or ability_state == ActionEffect.ActivationState.COOLDOWN
@@ -385,24 +378,20 @@ func detect_ability_use() -> void:
 		print("Ability is not ready to be cast.")
 		return
 
-	match current_effect.get_ability_type():
+	match ability.get_ability_type():
 		ActionEffect.AbilityType.PASSIVE:
 			print("Ability is not a casting ability.")
 		ActionEffect.AbilityType.AUTO_TARGETED:
 			ability.try_activate()
 		ActionEffect.AbilityType.FIXED_TARGETED:
-			var closest_unit = _get_nearest_target(
-				last_target_pos, current_effect.casting_range, null
-			)
+			var closest_unit = _get_nearest_target(last_target_pos, ability.get_cast_range(), null)
 			if closest_unit == null:
 				print("No valid targets in range")
 				return
 
 			ability.try_activate(closest_unit)
 		ActionEffect.AbilityType.DIRECTION_TARGETED:
-			var closest_unit = _get_nearest_target(
-				last_target_pos, current_effect.casting_range, null
-			)
+			var closest_unit = _get_nearest_target(last_target_pos, ability.get_cast_range(), null)
 			if closest_unit == null:
 				print("No valid targets in range")
 				return

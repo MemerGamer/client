@@ -264,6 +264,34 @@ func move_to(pos: Vector3):
 
 
 @rpc("any_peer", "call_local")
+func upgrade_ability(ability_name: String):
+	var character = get_character(multiplayer.get_remote_sender_id())
+	if not character:
+		print("Failed to find character")
+		return
+
+	if character.ability_upgrade_points <= 0:
+		print("Not enough ability points to upgrade ability")
+		return
+
+	if not character.abilities.has(ability_name):
+		print("Character does not have ability: " + ability_name)
+		return
+
+	var ability = character.abilities[ability_name] as Ability
+	if not ability:
+		print("Failed to find ability: " + ability_name)
+		return
+
+	if not ability.upgrade():
+		print("Failed to upgrade ability: " + ability_name)
+		return
+
+	character.ability_upgrade_points -= 1
+	character.upgrade_ability.rpc(ability_name)
+
+
+@rpc("any_peer", "call_local")
 func basic_attack(target_path):
 	var character = get_character(multiplayer.get_remote_sender_id())
 
