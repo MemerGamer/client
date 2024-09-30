@@ -292,49 +292,33 @@ func upgrade_ability(ability_name: String):
 
 
 @rpc("any_peer", "call_local")
-func basic_attack(target_path):
-	var character = get_character(multiplayer.get_remote_sender_id())
-
-	var target_unit = get_node(target_path) as Unit
-	if not target_unit:
-		print_debug("Failed to find target: " + target_path)
+func cast_ability(ability_name, target_param):
+	var character := get_character(multiplayer.get_remote_sender_id()) as Unit
+	if not character:
+		print("Failed to find character")
 		return
 
-	# Dont Kill Yourself
-	if target_unit == character:
-		print_debug("That's you ya idjit")  # :O
+	if not character.abilities.has(ability_name):
+		print("Character does not have ability: " + ability_name)
 		return
 
-	character.change_state("Attacking", target_unit)
-
-
-@rpc("any_peer", "call_local")
-func spawn_ability(ability_name, ability_type, ability_pos, ability_mana_cost, cooldown, ab_id):
-	var peer_id = multiplayer.get_remote_sender_id()
-	var character = get_character(peer_id)
-
-	if character.mana < ability_mana_cost:
-		print("Not enough mana!")
+	var ability = character.abilities[ability_name] as Ability
+	if not ability:
+		print("Failed to find ability: " + ability_name)
 		return
 
-	if player_cooldowns[peer_id][ab_id - 1] != 0:
-		print("This ability is on cooldown! Wait " + str(cooldown) + " seconds!")
+	if ability.get_ability_type() == ActionEffect.AbilityType.PASSIVE:
+		print("Cannot cast passive ability: " + ability_name)
 		return
 
-	player_cooldowns[peer_id][ab_id - 1] = cooldown
-	free_ability(cooldown, peer_id, ab_id - 1)
-	character.mana -= ability_mana_cost
-	print(character.mana)
+	var ability_state := ability.get_activation_state() as ActionEffect.ActivationState
+	if (
+		ability_state == ActionEffect.ActivationState.NONE
+		or ability_state == ActionEffect.ActivationState.COOLDOWN
+	):
+		return
 
-	rpc_id(
-		peer_id,
-		"spawn_local_effect",
-		ability_name,
-		ability_type,
-		ability_pos,
-		character.position,
-		character.team
-	)
+	character.change_state("Casting", [ability_name, target_param])
 
 
 @rpc("any_peer", "call_local")

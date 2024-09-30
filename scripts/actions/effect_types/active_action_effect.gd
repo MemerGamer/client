@@ -183,7 +183,7 @@ func _start_active(caster: Unit, _target) -> void:
 
 
 func _finish_active(caster: Unit, _target) -> void:
-	if _activation_state != ActivationState.ACTIVE:
+	if _activation_state == ActivationState.COOLDOWN or _activation_state == ActivationState.READY:
 		return
 
 	_current_haste = float(caster.current_stats.ability_haste)

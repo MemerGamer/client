@@ -18,7 +18,7 @@ func enter(entity: Unit, args = null):
 		return
 
 	var ability_name := arg_list[0] as String
-	var target = arg_list[1]
+	var new_target = arg_list[1]
 
 	ability = entity.abilities.get(ability_name) as Ability
 	if not ability:
@@ -26,10 +26,18 @@ func enter(entity: Unit, args = null):
 		entity.advance_state()
 		return
 
-	modify(entity, target)
+	modify(entity, [ability_name, new_target])
 
 
 func modify(entity: Unit, args):
+	var arg_list := args as Array
+	if not arg_list:
+		print("Ability args are not an array")
+		entity.advance_state()
+		return
+
+	var new_target = arg_list[1]
+
 	match ability.get_ability_type():
 		ActionEffect.AbilityType.PASSIVE:
 			print("Cannot cast passive ability: " + ability.name)
@@ -40,12 +48,12 @@ func modify(entity: Unit, args):
 			target = null
 
 		ActionEffect.AbilityType.FIXED_TARGETED:
-			if not args:
+			if not new_target:
 				print("No target entity provided")
 				entity.advance_state()
 				return
 
-			var other_unit := args as Unit
+			var other_unit := new_target as Unit
 			if not other_unit:
 				print("No target doesn't seem to be a unit")
 				entity.advance_state()
@@ -59,12 +67,12 @@ func modify(entity: Unit, args):
 			target = other_unit
 
 		ActionEffect.AbilityType.DIRECTION_TARGETED:
-			if not args:
+			if not new_target:
 				print("No target direction provided")
 				entity.advance_state()
 				return
 
-			var target_direction := args as Vector3
+			var target_direction := new_target as Vector3
 			if not target_direction:
 				print("Target direction is invalid")
 				entity.advance_state()

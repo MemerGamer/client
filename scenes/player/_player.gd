@@ -180,26 +180,6 @@ func _get_nearest_target(center: Vector3, target_range: int, target_mode = null)
 	return closest_unit
 
 
-func _player_action_attack_near(center: Vector3, target_mode = null) -> bool:
-	var closest_unit := (
-		_get_nearest_target(center, character.current_stats.attack_range, target_mode) as Unit
-	)
-
-	if closest_unit == null:
-		print("No valid targets in range")
-		return false
-
-	if closest_unit.team == get_character(multiplayer.get_unique_id()).team:
-		return false
-
-	var target_path = str(closest_unit.get_path())
-	server_listener.rpc_id(get_multiplayer_authority(), "basic_attack", target_path)
-
-	_play_move_marker(closest_unit.global_position, true)
-
-	return true
-
-
 func _show_ability_indicator(ability_name: String):
 	# make the attack range visable for a bit
 	if not Config.show_all_attack_ranges:
@@ -383,23 +363,30 @@ func detect_ability_use() -> void:
 		_play_move_marker(closest_unit.global_position, true)
 
 	if cast_finalized:
+		var target_param = null
 		match ability.get_ability_type():
-			ActionEffect.AbilityType.PASSIVE:
-				print("Ability is not a casting ability.")
 			ActionEffect.AbilityType.AUTO_TARGETED:
-				ability.try_activate()
+				pass
 			ActionEffect.AbilityType.FIXED_TARGETED:
-				if closest_unit:
-					ability.try_activate(closest_unit)
-			ActionEffect.AbilityType.DIRECTION_TARGETED:
-				if closest_unit:
-					var target_direction: Vector3 = last_target_pos.direction_to(
-						closest_unit.global_position
-					)
+				if not closest_unit:
+					return
 
-					ability.try_activate(target_direction)
-			_:  # Unknown ability type
-				print("Unknown ability type.")
+				target_param = closest_unit
+			ActionEffect.AbilityType.DIRECTION_TARGETED:
+				if not closest_unit:
+					return
+
+				var target_direction: Vector3 = last_target_pos.direction_to(
+					closest_unit.global_position
+				)
+				target_param = target_direction
+			_:  # Unknown ability type or passive ability
+				print("Ability cannot be cast or unknown ability type.")
+				return
+
+		server_listener.rpc_id(
+			get_multiplayer_authority(), "cast_ability", ability_name, target_param
+		)
 
 
 func camera_movement_handler() -> void:
