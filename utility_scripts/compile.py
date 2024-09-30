@@ -162,9 +162,10 @@ if __name__ == "__main__":
             args["build_system"],
             "extensions"
         ]
-        setup_output = subprocess.run(setup_command, cwd=project_dir, check=True)
+        setup_output = subprocess.run(setup_command, cwd=project_dir, check=False)
         if setup_output.returncode != 0:
             print("Failed to run the setup command")
+            print(setup_output)
             exit(1)
 
     # Compile the source file
@@ -172,15 +173,17 @@ if __name__ == "__main__":
     if args["jobs"] > 0:
         compile_command.append("--parallel")
         compile_command.append(str(args["jobs"]))
-    compile_output = subprocess.run(compile_command, cwd=project_dir, check=True)
+    compile_output = subprocess.run(compile_command, cwd=project_dir, check=False)
     if compile_output.returncode != 0:
         print("Failed to run the compile command")
+        print(compile_output)
         exit(1)
 
     # install the build output
     install_command = [*cmake_command, "--install", build_dir]
-    install_output = subprocess.run(install_command, cwd=project_dir, check=True)
+    install_output = subprocess.run(install_command, cwd=project_dir, check=False)
     if install_output.returncode != 0:
         print("Failed to install the build output")
+        print(install_output)
         exit(1)
     
