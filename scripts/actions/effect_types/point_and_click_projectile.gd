@@ -88,6 +88,9 @@ func stop_preview_cast(_caster: Unit) -> void:
 func _start_channeling(caster: Unit, target) -> bool:
 	_activation_state = ActivationState.READY
 
+	if target == null:
+		return false
+
 	var target_unit = target as Unit
 	if not target_unit:
 		print("Could not start channeling effect. Target is not a unit.")

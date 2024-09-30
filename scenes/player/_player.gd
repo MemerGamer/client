@@ -508,7 +508,7 @@ func try_purchasing_item(item_name: String) -> bool:
 		print(tr("ITEM:NOT_ENOUGH_ACTIVE_SLOTS") % display_strings["name"])
 		return false
 
-	var new_item_count = new_inventory.size() + 1
+	var new_item_count = new_inventory.size()
 	if new_item_count > character.passive_item_slots + character.active_item_slots:
 		var display_strings = item.get_desctiption_strings(character)
 		print(tr("ITEM:NOT_ENOUGH_SLOTS") % display_strings["name"])

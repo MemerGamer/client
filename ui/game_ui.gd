@@ -80,6 +80,11 @@ func _update_items():
 		passive_items_container.remove_child(item)
 		item.queue_free()
 
+	var active_item_icons = active_items_container.get_children()
+	for item in active_item_icons:
+		active_items_container.remove_child(item)
+		item.queue_free()
+
 	for index in range(_character.passive_item_slots):
 		var item_box: Node = null
 		if index < _character.item_slots_passive.size():
@@ -96,7 +101,21 @@ func _update_items():
 
 		passive_items_container.add_child(item_box)
 
-	pass
+	for index in range(_character.active_item_slots):
+		var item_box: Node = null
+		if index < _character.item_slots_active.size():
+			var item = _character.item_slots_active[index] as Item
+			var icon = _get_item_texture(item)
+			if icon != null:
+				item_box = _create_item_box(icon, item.get_tooltip_string(_character), "")
+
+		if item_box == null:
+			item_box = _create_item_box(null, "", "")
+			if item_box == null:
+				print("Failed to create item box")
+				continue
+
+		active_items_container.add_child(item_box)
 
 
 func _get_item_texture(item: Item = null) -> Texture2D:
