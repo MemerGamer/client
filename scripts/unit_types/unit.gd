@@ -165,6 +165,8 @@ var items_changed: bool = false
 
 var abilities: Dictionary = {}
 
+var abilities_changed: bool = false
+
 # Each bit of cc_state represents a different type of crowd control.
 var cc_state: int = 0
 var effect_array: Array[UnitEffect] = []
@@ -766,6 +768,7 @@ func upgrade_ability(ability_name):
 		return
 
 	ability_upgrade_points -= 1
+	abilities_changed = true
 
 
 @rpc("authority", "call_local")

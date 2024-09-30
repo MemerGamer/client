@@ -1,30 +1,36 @@
 extends Node
 
-@export var _map: Node
-
-@onready var player_icon = $CharacterUI/PortraitBorder/Portrait
-@onready var money_count = $GameStats/Money
-@onready var kda_display = $GameStats/KDA
-@onready var cs_display = $GameStats/CS
-
-@onready var hp_bar = $CharacterUI/HealthMana/HealthBar
-@onready var mana_bar = $CharacterUI/HealthMana/ManaBar
-
-@onready var player_display = $CharacterUI/Level
-@onready var player_level_number = $CharacterUI/Level/LevelNumber
-
-@onready var spells_container = $CharacterUI/Items/HBoxContainer/SpellsPanel/SpellsContainer
-@onready var active_items_container = $CharacterUI/Items/HBoxContainer/ActiveItemPanel/ActiveItemGrid
-@onready
-var passive_items_container = $CharacterUI/Items/HBoxContainer/PassiveItemPanel/PassiveItemGrid
-
-const item_box_scene = preload("res://ui/player_stats/item_box_base.tscn")
-const item_icon_size = Vector2(24, 24)
-
-var _character
+const ITEM_BOX_SCENE = preload("res://ui/player_stats/item_box_base.tscn")
+const ABILITY_BOX_SCENE = preload("res://ui/player_stats/ability_box_base.tscn")
+const ITEM_ICON_SIZE = Vector2(24, 24)
+const ABILITY_ICON_SIZE = Vector2(48, 48)
+const PASSIVE_SIZE = Vector2(24, 24)
 
 var waiting_for_character = false
 var first_draw_iteration = true
+
+var _map: Node
+var _character: Unit
+
+@onready var player_icon := $CharacterUI/PortraitBorder/Portrait
+@onready var money_count := $GameStats/Money
+@onready var kda_display := $GameStats/KDA
+@onready var cs_display := $GameStats/CS
+
+@onready var hp_bar := $CharacterUI/HealthMana/HealthBar
+@onready var mana_bar := $CharacterUI/HealthMana/ManaBar
+
+@onready var player_display := $CharacterUI/Level
+@onready var player_level_number := $CharacterUI/Level/LevelNumber
+
+@onready var spells_container := $CharacterUI/Items/HBoxContainer/SpellsPanel/SpellsContainer
+@onready
+var active_items_container := $CharacterUI/Items/HBoxContainer/ActiveItemPanel/ActiveItemGrid
+@onready
+var passive_items_container := $CharacterUI/Items/HBoxContainer/PassiveItemPanel/PassiveItemGrid
+
+@onready var abilities_container := $CharacterUI/PanelContainer/AbilitiesHbox
+@onready var passive_ability_container := $CharacterUI/Passive
 
 
 func _ready() -> void:
@@ -68,10 +74,20 @@ func _process(_delta: float) -> void:
 		"XP: " + str(_character.level_exp) + "/" + str(_character.required_exp)
 	)
 
-	if _character.items_changed or first_draw_iteration:
+	if first_draw_iteration:
+		_update_items()
+		_update_abilities()
+		first_draw_iteration = false
+
+	if _character.items_changed:
 		_character.items_changed = false
 		first_draw_iteration = false
 		_update_items()
+
+	if _character.abilities_changed:
+		_character.abilities_changed = false
+		first_draw_iteration = false
+		_update_abilities()
 
 
 func _update_items():
@@ -89,9 +105,11 @@ func _update_items():
 		var item_box: Node = null
 		if index < _character.item_slots_passive.size():
 			var item = _character.item_slots_passive[index] as Item
-			var icon = _get_item_texture(item)
-			if icon != null:
-				item_box = _create_item_box(icon, item.get_tooltip_string(_character), "")
+			var icon_id := item.get_texture_resource() as Identifier
+			if icon_id and icon_id.is_valid():
+				var icon = _get_texture(item)
+				if icon != null:
+					item_box = _create_item_box(icon, item.get_tooltip_string(_character), "")
 
 		if item_box == null:
 			item_box = _create_item_box(null, "", "")
@@ -105,9 +123,11 @@ func _update_items():
 		var item_box: Node = null
 		if index < _character.item_slots_active.size():
 			var item = _character.item_slots_active[index] as Item
-			var icon = _get_item_texture(item)
-			if icon != null:
-				item_box = _create_item_box(icon, item.get_tooltip_string(_character), "")
+			var icon_id := item.get_texture_resource() as Identifier
+			if icon_id and icon_id.is_valid():
+				var icon = _get_texture(item)
+				if icon != null:
+					item_box = _create_item_box(icon, item.get_tooltip_string(_character), "")
 
 		if item_box == null:
 			item_box = _create_item_box(null, "", "")
@@ -118,14 +138,59 @@ func _update_items():
 		active_items_container.add_child(item_box)
 
 
-func _get_item_texture(item: Item = null) -> Texture2D:
-	if item == null:
-		return null
+func _update_abilities():
+	var ability_icons = abilities_container.get_children()
+	for ability in ability_icons:
+		abilities_container.remove_child(ability)
+		ability.queue_free()
 
-	var icon_id = item.get_texture_resource() as Identifier
-	if icon_id == null or not icon_id.is_valid():
-		return null
+	var passive_ability_icons = passive_ability_container.get_children()
+	for ability in passive_ability_icons:
+		passive_ability_container.remove_child(ability)
+		ability.queue_free()
 
+	var passive_ability := _character.abilities["passive"] as Ability
+	if passive_ability != null:
+		var passive_icon_id = passive_ability.get_texture_resource() as Identifier
+		if passive_icon_id != null and passive_icon_id.is_valid():
+			var passive_icon = _get_texture(passive_icon_id)
+			var passive_tooltip = passive_ability.get_tooltip_string(_character)
+			var passive_ability_box = _create_ability_box(passive_icon, passive_tooltip, "", true)
+			if passive_ability_box != null:
+				passive_ability_container.add_child(passive_ability_box)
+
+	var ability_names = _character.abilities.keys()
+	for ability_name in ability_names:
+		ability_name = ability_name as String
+
+		if not ability_name.begins_with("ability_"):
+			continue
+
+		var ability = _character.abilities[ability_name] as Ability
+		if ability == null:
+			print("Failed to get ability %s" % ability_name)
+			continue
+
+		var icon_id = ability.get_texture_resource() as Identifier
+		if icon_id == null or not icon_id.is_valid():
+			print("Icon for ability %s not found" % ability_name)
+			continue
+
+		var icon = _get_texture(icon_id)
+		if icon == null:
+			print("Icon for ability %s not loaded: %s" % [ability_name, icon_id.to_string()])
+			continue
+
+		var tooltip = ability.get_tooltip_string(_character)
+		var ability_box = _create_ability_box(icon, tooltip, "")
+		if ability_box == null:
+			print("Failed to create ability box for %s" % ability_name)
+			continue
+
+		abilities_container.add_child(ability_box)
+
+
+func _get_texture(icon_id: Identifier = null) -> Texture2D:
 	var icon_path = AssetIndexer.get_asset_path(icon_id)
 	if icon_path == "":
 		return null
@@ -138,7 +203,7 @@ func _get_item_texture(item: Item = null) -> Texture2D:
 
 
 func _create_item_box(icon: Texture2D, tooltip: String, text: String):
-	var item_box = item_box_scene.instantiate()
+	var item_box = ITEM_BOX_SCENE.instantiate()
 	if item_box == null:
 		print("Failed to instantiate item box")
 		return null
@@ -153,7 +218,7 @@ func _create_item_box(icon: Texture2D, tooltip: String, text: String):
 		item_box_icon.texture = icon
 		item_box_icon.expand_mode = TextureRect.EXPAND_FIT_HEIGHT
 		item_box_icon.stretch_mode = TextureRect.STRETCH_SCALE
-		item_box_icon.custom_minimum_size = item_icon_size
+		item_box_icon.custom_minimum_size = ITEM_ICON_SIZE
 
 		if tooltip != "":
 			item_box_icon.tooltip_text = tooltip
@@ -169,6 +234,45 @@ func _create_item_box(icon: Texture2D, tooltip: String, text: String):
 	return item_box
 
 
+func _create_ability_box(icon: Texture2D, tooltip: String, text: String, passive: bool = false):
+	var ability_box = ABILITY_BOX_SCENE.instantiate()
+	if ability_box == null:
+		print("Failed to instantiate ability box")
+		return null
+
+	var ability_box_bg = ability_box.get_node("AspectBox/Background")
+	if ability_box_bg == null:
+		print("Failed to get ability box bg")
+		return ability_box
+
+	if icon != null:
+		var ability_box_icon = TextureRect.new()
+		ability_box_icon.texture = icon
+		ability_box_icon.expand_mode = TextureRect.EXPAND_FIT_HEIGHT
+		ability_box_icon.stretch_mode = TextureRect.STRETCH_SCALE
+		if passive:
+			ability_box_icon.custom_minimum_size = PASSIVE_SIZE
+			ability_box.custom_minimum_size = PASSIVE_SIZE
+			ability_box_bg.custom_minimum_size = PASSIVE_SIZE
+		else:
+			ability_box_icon.custom_minimum_size = ABILITY_ICON_SIZE
+			ability_box.custom_minimum_size = ABILITY_ICON_SIZE
+			ability_box_bg.custom_minimum_size = ABILITY_ICON_SIZE
+
+		if tooltip != "":
+			ability_box_icon.tooltip_text = tooltip
+			ability_box_icon.mouse_filter = Control.MOUSE_FILTER_PASS
+
+		ability_box_bg.add_child(ability_box_icon)
+
+	if text != "":
+		var item_box_label = RichTextLabel.new()
+		item_box_label.text = text
+		ability_box_bg.add_child(item_box_label)
+
+	return ability_box
+
+
 func _set_icons():
 	if waiting_for_character:
 		return
@@ -176,11 +280,11 @@ func _set_icons():
 	waiting_for_character = true
 
 	while _character == null:
-		var _char = _map.get_character(multiplayer.get_unique_id())
-		if typeof(_char) == TYPE_BOOL:
+		var returned_char = _map.get_character(multiplayer.get_unique_id())
+		if typeof(returned_char) == TYPE_BOOL:
 			print("Character not found")
-		elif _char != null:
-			_character = _char
+		elif returned_char != null:
+			_character = returned_char as Unit
 			break
 
 		print("Character not found")

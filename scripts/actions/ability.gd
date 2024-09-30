@@ -117,6 +117,44 @@ func get_cast_range() -> int:
 	return int(active_effect.casting_range)
 
 
+func get_texture_resource() -> Identifier:
+	return _texture_id
+
+
+func get_tooltip_string(character: Unit) -> String:
+	var tooltip_string = ""
+	var can_be_upgraded = can_upgrade()
+
+	var display_level = _level
+	if _current_effect == null:
+		display_level = 0
+
+	var ability_name = tr("UNIT:%s:NAME" % _display_id.to_string())
+	if can_be_upgraded:
+		tooltip_string += "%s (%d)\n" % [ability_name, display_level]
+	else:
+		tooltip_string += "%s\n" % ability_name
+
+	var ability_lore = tr("UNIT:%s:LORE" % _display_id.to_string())
+	tooltip_string += "%s\n\n" % ability_lore
+
+	if _current_effect:
+		var current_effect_desc = _current_effect.get_description_string(character, "UNIT")
+		tooltip_string += "Current Effect:\n%s\n\n" % current_effect_desc
+
+	if can_be_upgraded:
+		var next_effect_desc = _ability_levels[_level].get_description_string(character, "UNIT")
+		tooltip_string += "Next Effect:\n%s" % next_effect_desc
+
+	return tooltip_string
+
+
+func get_desctiption_strings(_caster: Unit = null) -> Dictionary:
+	var ability_descriptions: Dictionary = {}
+
+	return ability_descriptions
+
+
 func get_ability_type() -> ActionEffect.AbilityType:
 	if _current_effect == null:
 		return ActionEffect.AbilityType.PASSIVE

@@ -1,7 +1,6 @@
 [gd_scene load_steps=20 format=3 uid="uid://bevs6vkkwqdmv"]
 
 [ext_resource type="Script" path="res://ui/game_ui.gd" id="1_21aey"]
-[ext_resource type="PackedScene" uid="uid://bu1bxbv3d7rpj" path="res://ui/settings_menu/settings_menu.tscn" id="1_b1o7r"]
 [ext_resource type="StyleBox" path="style://openchamp:elements/progressbar_back" id="2_ocle2"]
 [ext_resource type="StyleBox" path="style://openchamp:elements/health_fill" id="3_sb1q7"]
 [ext_resource type="StyleBox" path="style://openchamp:elements/mana_fill" id="4_bdhvv"]
@@ -85,6 +84,8 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_t4u77"]
+
 [node name="TestUi" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -93,10 +94,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_21aey")
-
-[node name="SettingsMenu" parent="." instance=ExtResource("1_b1o7r")]
-visible = false
-layout_mode = 1
 
 [node name="StatsInterface" type="Node" parent="."]
 script = ExtResource("4_kvve8")
@@ -277,6 +274,7 @@ expand_mode = 3
 
 [node name="Passive" type="Panel" parent="CharacterUI"]
 z_index = 2
+clip_contents = true
 layout_mode = 0
 offset_top = 61.0
 offset_right = 22.0
@@ -454,3 +452,20 @@ layout_mode = 2
 
 [node name="ItemBoxBase4" parent="CharacterUI/Items/HBoxContainer/PassiveItemPanel/PassiveItemGrid" instance=ExtResource("13_u3smd")]
 layout_mode = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="CharacterUI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 90.0
+offset_top = -8.0
+offset_right = -178.0
+offset_bottom = -56.0001
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_t4u77")
+
+[node name="AbilitiesHbox" type="HBoxContainer" parent="CharacterUI/PanelContainer"]
+layout_mode = 2
+theme_override_constants/separation = 5
