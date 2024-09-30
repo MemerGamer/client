@@ -60,6 +60,7 @@ func get_copy(new_effect: ActionEffect = null) -> ActionEffect:
 
 	new_effect.damage = damage
 	new_effect.scaling_calc = scaling_calc
+	new_effect.scaling_display = scaling_display
 	new_effect.damage_type = damage_type
 	new_effect.can_crit = can_crit
 
@@ -70,8 +71,8 @@ func get_copy(new_effect: ActionEffect = null) -> ActionEffect:
 	return new_effect
 
 
-func get_description_string(_caster: Unit) -> String:
-	var effect_string = super(_caster) + "\n"
+func get_description_string(_caster: Unit, prefix: String = "ACTION_EFFECT") -> String:
+	var effect_string = super(_caster, prefix) + "\n"
 	var damage_type_string = Unit.PARSE_DAMAGE_TYPE.find_key(damage_type)
 	var damage_type_translation = tr("DAMAGE_TYPE:" + damage_type_string + ":NAME")
 

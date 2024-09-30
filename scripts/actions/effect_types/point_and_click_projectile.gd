@@ -85,6 +85,28 @@ func stop_preview_cast(_caster: Unit) -> void:
 	attack_range_visualizer.hide()
 
 
+func get_description_string(_caster: Unit, prefix: String = "ACTION_EFFECT") -> String:
+	var effect_string = super(_caster, prefix) + "\n"
+	var damage_type_string = Unit.PARSE_DAMAGE_TYPE.find_key(damage_type)
+	var damage_type_translation = tr("DAMAGE_TYPE:" + damage_type_string + ":NAME")
+
+	var filled_scaling_string = scaling_display.call(_caster)
+	var attack_range := int(casting_range)
+	if use_attack_range:
+		attack_range = _caster.current_stats.attack_range
+
+	var cooldown := float(cooldown_time)
+	if attack_speed_scaled:
+		cooldown = 1.0 / _caster.current_stats.attack_speed
+
+	effect_string += (
+		tr("EFFECT:PointAndClickDamageEffect:scaled")
+		% [filled_scaling_string, damage_type_translation, attack_range, cooldown]
+	)
+
+	return effect_string
+
+
 func _start_channeling(caster: Unit, target) -> bool:
 	_activation_state = ActivationState.READY
 

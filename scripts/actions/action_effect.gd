@@ -178,8 +178,8 @@ func disconnect_from_unit(_unit: Unit) -> void:
 	pass
 
 
-func get_description_string(_caster: Unit) -> String:
-	return tr("ACTION_EFFECT:%s" % _display_id.to_string())
+func get_description_string(_caster: Unit, prefix: String = "ACTION_EFFECT") -> String:
+	return tr("%s:%s" % [prefix, _display_id.to_string()])
 
 
 ## Actually load the action effect from a dictionary.
