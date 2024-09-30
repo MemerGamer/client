@@ -1,6 +1,6 @@
 extends Control
 
-const ui_sound_set: int = 2
+const UI_SOUND_SET: int = 2
 
 var player_instance: Node
 
@@ -8,12 +8,14 @@ var hover_sound_player: AudioStreamPlayer
 var buy_success_sound_player: AudioStreamPlayer
 var buy_reject_sound_player: AudioStreamPlayer
 
+var _focus_item: Control
+
 @onready var item_lists_container: BoxContainer = $ScrollContainer/ItemListsContainer
 
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	var hover_sound := load("audio://openchamp:sfx/ui_%d/button_hover" % ui_sound_set)
+	var hover_sound := load("audio://openchamp:sfx/ui_%d/button_hover" % UI_SOUND_SET)
 	if not hover_sound:
 		print("error loading hover sound")
 		return
@@ -25,7 +27,7 @@ func _ready() -> void:
 
 	add_child(hover_sound_player)
 
-	var click_sound := load("audio://openchamp:sfx/ui_%d/button_press" % ui_sound_set)
+	var click_sound := load("audio://openchamp:sfx/ui_%d/button_press" % UI_SOUND_SET)
 
 	buy_success_sound_player = AudioStreamPlayer.new()
 	buy_success_sound_player.name = "UIBuySuccessSoundPlayer"
@@ -34,7 +36,7 @@ func _ready() -> void:
 
 	add_child(buy_success_sound_player)
 
-	var reject_sound := load("audio://openchamp:sfx/ui_%d/button_reject" % ui_sound_set)
+	var reject_sound := load("audio://openchamp:sfx/ui_%d/button_reject" % UI_SOUND_SET)
 
 	buy_reject_sound_player = AudioStreamPlayer.new()
 	buy_reject_sound_player.name = "UIBuyRejectSoundPlayer"
@@ -64,14 +66,14 @@ func _ready() -> void:
 
 		item_lists_container.add_child(HSeparator.new())
 
-		var _item_tier_box = FlowContainer.new()
-		_item_tier_box.name = "Item_tier_flow_%d" % item_tier
+		var item_tier_flow_box = FlowContainer.new()
+		item_tier_flow_box.name = "Item_tier_flow_%d" % item_tier
 
 		for _item in all_in_tier:
 			var texture_resource = _item.get_texture_resource()
 			var raw_texture_path = AssetIndexer.get_asset_path(texture_resource)
-			var item_texture = load(raw_texture_path)
-			if item_texture == null:
+			var raw_item_texture = load(raw_texture_path) as Texture2D
+			if raw_item_texture == null:
 				print(
 					(
 						"Item (%s): Texture (%s) not found. Tried loading (%s)"
@@ -80,29 +82,28 @@ func _ready() -> void:
 				)
 				continue
 
-			var item_image := TextureRect.new()
-			item_image.texture = item_texture
-			item_image.expand_mode = TextureRect.EXPAND_FIT_HEIGHT
-			item_image.stretch_mode = TextureRect.STRETCH_SCALE
-			item_image.tooltip_text = _item.get_tooltip_string()
+			var item_texture = ImageTexture.create_from_image(raw_item_texture.get_image())
+			item_texture.set_size_override(Vector2i(64, 64))
 
-			var item_container := AspectRatioContainer.new()
-			item_container.size = Vector2(64, 64)
-			item_container.custom_minimum_size = Vector2(64, 64)
-			item_container.mouse_filter = Control.MOUSE_FILTER_STOP
+			var item_button := Button.new()
+			item_button.tooltip_text = _item.get_tooltip_string()
 
 			var item_id_str = _item.get_id().to_string()
-			item_container.name = item_id_str
-			item_container.gui_input.connect(
-				func asset_callback(input_event): try_purchase_item(input_event, item_id_str)
-			)
+			item_button.name = item_id_str
+			item_button.pressed.connect(try_purchase_item.bind(item_id_str))
 
-			item_container.add_child(item_image)
-			item_container.mouse_entered.connect(func(): hover_sound_player.play())
+			item_button.mouse_entered.connect(func(): hover_sound_player.play())
+			item_button.focus_entered.connect(func(): hover_sound_player.play())
+			item_button.focus_mode = Control.FOCUS_ALL
 
-			_item_tier_box.add_child(item_container)
+			item_button.icon = item_texture
 
-		item_lists_container.add_child(_item_tier_box)
+			item_tier_flow_box.add_child(item_button)
+
+			if not _focus_item:
+				_focus_item = item_button
+
+		item_lists_container.add_child(item_tier_flow_box)
 
 		if item_tier != item_tiers:
 			item_lists_container.add_child(HSeparator.new())
@@ -110,19 +111,13 @@ func _ready() -> void:
 	item_lists_container.add_child(HSeparator.new())
 	item_lists_container.add_spacer(false)
 
+	if not _focus_item:
+		_focus_item = self
+
 	hide()
 
 
-func try_purchase_item(input_event, item_name: String) -> void:
-	if not (input_event is InputEventMouseButton):
-		return
-
-	if input_event.button_index != MOUSE_BUTTON_LEFT:
-		return
-
-	if not input_event.is_pressed():
-		return
-
+func try_purchase_item(item_name: String) -> void:
 	hover_sound_player.stop()
 
 	var item = RegistryManager.items().get_element(item_name) as Item
@@ -151,4 +146,5 @@ func _input(event: InputEvent) -> void:
 			return
 
 		show()
+		_focus_item.grab_focus.call_deferred()
 		Config.in_focued_menu = true

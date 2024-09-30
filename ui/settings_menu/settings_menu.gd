@@ -22,31 +22,33 @@ var cam_pan_sesitivity_slider = $SplitContainer/PanelContainer/TabContainer/SETT
 
 func _ready():
 	hide()
-	visibility_changed.connect(on_show)
 
 	ExitBtn.pressed.connect(_on_game_close_pressed)
 	ConfirmBtn.pressed.connect(_on_confirm_changes)
 
 
-func _input(event):
-	if not event.is_action_pressed("player_pause"):
+func _process(_delta: float) -> void:
+	if not Input.is_action_just_pressed("player_pause"):
 		return
 
-	if visible:
+	# TODO: figure out why esc has to be pressed twice to close the settings menu
+
+	if is_visible_in_tree():
 		hide()
+		Config.in_focued_menu = false
 	else:
 		# make sure we aren't already in a different menu
 		if Config.in_focued_menu:
 			return
 
 		show()
+		display_settings_values()
+		ConfirmBtn.grab_focus.call_deferred()
+		Config.in_focued_menu = true
+		queue_redraw()
 
 
-func on_show():
-	Config.in_focued_menu = visible
-	if not visible:
-		return
-
+func display_settings_values():
 	fullscreen_toggle.button_pressed = Config.graphics_settings.is_fullscreen
 
 	cam_speed_slider.value = Config.camera_settings.cam_speed
@@ -82,4 +84,5 @@ func _on_confirm_changes():
 	Config.change_graphics_settings(new_graphics_settings)
 
 	# hide the settings menu
+	Config.in_focued_menu = false
 	hide()

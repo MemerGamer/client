@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://addons/sliderlabel/sliderlabel.gd" id="2_krd3l"]
 
 [node name="SettingsMenu" type="Control"]
+z_index = 10
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
