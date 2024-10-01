@@ -2,9 +2,9 @@ extends Node3D
 
 const MoveMarker := preload("res://scenes/effects/move_marker.tscn")
 
-@export var cur_zoom: int
+var cur_zoom: int
 #@onready var attack_move_cast: ShapeCast3D = $AttackMoveCast
-@export var server_listener: Node
+var server_listener: Node
 
 var camera_target_position := Vector3.ZERO
 var initial_mouse_position := Vector2.ZERO

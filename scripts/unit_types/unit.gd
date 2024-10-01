@@ -165,8 +165,6 @@ var items_changed: bool = false
 
 var abilities: Dictionary = {}
 
-var abilities_changed: bool = false
-
 # Each bit of cc_state represents a different type of crowd control.
 var cc_state: int = 0
 var effect_array: Array[UnitEffect] = []
@@ -365,11 +363,11 @@ func level_up(times: int = 1):
 	if player_controlled:
 		print("Level up!")
 
-	current_stats_changed.emit(old_stats, current_stats)
-
 	level += times
 	ability_upgrade_points += times
 	required_exp = get_exp_for_levelup(level + 1)
+
+	current_stats_changed.emit(old_stats, current_stats)
 
 
 func give_exp(amount: int):
@@ -768,7 +766,7 @@ func upgrade_ability(ability_name):
 		return
 
 	ability_upgrade_points -= 1
-	abilities_changed = true
+	current_stats_changed.emit(current_stats, current_stats)
 
 
 @rpc("authority", "call_local")

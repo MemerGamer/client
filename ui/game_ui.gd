@@ -9,6 +9,8 @@ const PASSIVE_SIZE = Vector2(24, 24)
 var waiting_for_character = false
 var first_draw_iteration = true
 
+var upgrade_icon: Texture2D
+
 var _map: Node
 var _character: Unit
 
@@ -40,6 +42,13 @@ func _ready() -> void:
 	if _map == null:
 		print("map not set")
 		return
+
+	var raw_upgrade_icon = _get_texture(
+		Identifier.for_resource("texture://openchamp:units/characters/ability_up")
+	)
+
+	upgrade_icon = ImageTexture.create_from_image(raw_upgrade_icon.get_image())
+	upgrade_icon.set_size_override(Vector2i(48, 48))
 
 	# Todo get the current player and set the icons to the
 	# the ones for the actual character of the current player
@@ -81,13 +90,7 @@ func _process(_delta: float) -> void:
 
 	if _character.items_changed:
 		_character.items_changed = false
-		first_draw_iteration = false
 		_update_items()
-
-	if _character.abilities_changed:
-		_character.abilities_changed = false
-		first_draw_iteration = false
-		_update_abilities()
 
 
 func _update_items():
@@ -106,8 +109,8 @@ func _update_items():
 		if index < _character.item_slots_passive.size():
 			var item = _character.item_slots_passive[index] as Item
 			var icon_id := item.get_texture_resource() as Identifier
-			if icon_id and icon_id.is_valid():
-				var icon = _get_texture(item)
+			if icon_id != null and icon_id.is_valid():
+				var icon = _get_texture(icon_id)
 				if icon != null:
 					item_box = _create_item_box(icon, item.get_tooltip_string(_character), "")
 
@@ -187,7 +190,30 @@ func _update_abilities():
 			print("Failed to create ability box for %s" % ability_name)
 			continue
 
-		abilities_container.add_child(ability_box)
+		var ability_container := VBoxContainer.new()
+		abilities_container.size_flags_vertical = Control.SIZE_SHRINK_END
+
+		if _character.ability_upgrade_points > 0:
+			var upgrade_button = Button.new()
+
+			upgrade_button.icon = upgrade_icon
+			upgrade_button.custom_minimum_size = ABILITY_ICON_SIZE
+			upgrade_button.size = ABILITY_ICON_SIZE
+			upgrade_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			upgrade_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			upgrade_button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			upgrade_button.flat = true
+			upgrade_button.expand_icon = true
+
+			var upgrade_function = _map.rpc_id.bind(
+				get_multiplayer_authority(), "upgrade_ability", ability_name
+			)
+
+			upgrade_button.pressed.connect(upgrade_function)
+			ability_container.add_child(upgrade_button)
+
+		ability_container.add_child(ability_box)
+		abilities_container.add_child(ability_container)
 
 
 func _get_texture(icon_id: Identifier = null) -> Texture2D:
@@ -298,6 +324,8 @@ func _set_icons():
 	if _player_icon == null:
 		print("Icon not loaded")
 		return
+
+	_character.current_stats_changed.connect(func(_old_stats, _new_stats): self._update_abilities())
 
 	player_icon.texture = _player_icon
 

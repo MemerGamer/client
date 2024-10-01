@@ -277,7 +277,7 @@ func upgrade_ability(ability_name: String):
 		return
 
 	if character.ability_upgrade_points <= 0:
-		print("Not enough ability points to upgrade ability")
+		print("Not enough ability points to upgrade ability: " + ability_name)
 		return
 
 	if not character.abilities.has(ability_name):
