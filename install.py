@@ -74,6 +74,8 @@ def download_and_install_extension() -> bool:
         return False
 
     url = git_url.replace("https://github.com", "https://api.github.com/repos")
+    # Remove .git from the end
+    url = url[:-4]
 
     releases_url = f"{url}/releases"
     releases = requests.get(releases_url).json()
